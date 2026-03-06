@@ -1,4 +1,21 @@
-# VIGILUS — Italy Crisis Board
+<p align="center">
+  <img src="frontend/public/favicon.svg" alt="VIGILUS Logo" width="120" />
+</p>
+
+<h1 align="center">VIGILUS — Italy Crisis Board</h1>
+
+<p align="center">
+  <em>Real-time OSINT intelligence dashboard for Italy's national security</em>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License" />
+  <img src="https://img.shields.io/badge/Python-3.12-green.svg" alt="Python" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB.svg" alt="React" />
+  <img src="https://img.shields.io/badge/API-32%20endpoints-indigo.svg" alt="API" />
+  <img src="https://img.shields.io/badge/Tests-176%20passed-brightgreen.svg" alt="Tests" />
+  <img src="https://img.shields.io/badge/Coverage-69%25-yellow.svg" alt="Coverage" />
+</p>
 
 [🇮🇹 Italiano](#italiano) · [🇬🇧 English](#english)
 
