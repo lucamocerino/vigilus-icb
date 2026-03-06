@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/public/favicon.svg" alt="VIGILUS Logo" width="280" />
+  <img src="frontend/public/favicon.svg" alt="VIGILUS Logo" width="200" />
 </p>
 
 <h1 align="center">VIGILUS — Italy Crisis Board</h1>
