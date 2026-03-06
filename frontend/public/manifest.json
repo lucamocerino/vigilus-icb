@@ -1,0 +1,14 @@
+{
+  "name": "VIGILUS — Italy Crisis Board",
+  "short_name": "VIGILUS",
+  "description": "Real-time OSINT intelligence dashboard for Italy's national security",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05070f",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "categories": ["news", "security"]
+}

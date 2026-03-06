@@ -1,0 +1,251 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme CSS variables */
+:root {
+  --term-bg: #05070f;
+  --term-surface: #080c18;
+  --term-border: #0f1829;
+  --term-muted: #1a2540;
+  --term-dim: #2a3a5c;
+  --glow-indigo: rgba(99, 102, 241, 0.15);
+  --glow-red: rgba(239, 68, 68, 0.15);
+  --glow-cyan: rgba(6, 182, 212, 0.12);
+}
+
+:root.light {
+  --term-bg: #f8fafc;
+  --term-surface: #ffffff;
+  --term-border: #e2e8f0;
+  --term-muted: #cbd5e1;
+  --term-dim: #94a3b8;
+  --glow-indigo: rgba(99, 102, 241, 0.08);
+  --glow-red: rgba(239, 68, 68, 0.08);
+  --glow-cyan: rgba(6, 182, 212, 0.06);
+}
+
+@layer base {
+  body {
+    @apply bg-term-bg antialiased;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    color: #e5e7eb;
+  }
+  .light body, :root.light body {
+    color: #1e293b;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--term-muted) transparent;
+  }
+  *::-webkit-scrollbar { width: 4px; height: 4px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: var(--term-muted); border-radius: 4px; }
+}
+
+@layer components {
+  .card {
+    @apply bg-term-surface border border-term-border p-4 rounded-lg;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Glow on hover */
+  .card:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 20px var(--glow-indigo), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  /* Top accent line */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .card:hover::before {
+    opacity: 1;
+  }
+
+  .term-label {
+    @apply text-xs uppercase tracking-widest font-medium;
+    color: var(--term-dim);
+    text-shadow: 0 0 10px rgba(99,102,241,0.2);
+  }
+
+  .term-value {
+    @apply tabular-nums font-bold;
+  }
+
+  .term-separator {
+    @apply border-t border-term-border;
+  }
+
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+/* ── Ambient glow effects ── */
+@keyframes ambient-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+/* Status dot glow */
+@keyframes dot-glow {
+  0%, 100% { box-shadow: 0 0 4px currentColor; }
+  50% { box-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+}
+.animate-pulse {
+  animation: dot-glow 2s ease-in-out infinite;
+}
+
+/* ── Header glassmorphism ── */
+header {
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+}
+
+/* ── Score number glow ── */
+.score-glow {
+  text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+}
+
+/* ── Button interactions ── */
+button {
+  transition: all 0.2s ease;
+}
+button:active {
+  transform: scale(0.97);
+}
+
+/* Nav tab active indicator */
+nav button[class*="border-indigo"] {
+  text-shadow: 0 0 8px rgba(99,102,241,0.5);
+}
+
+/* ── Ticker enhancements ── */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-scroll {
+  animation: ticker-scroll linear infinite;
+}
+
+/* Ticker fade edges */
+.ticker-scroll-container {
+  mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
+}
+
+/* ── Map effects ── */
+.leaflet-container { background: var(--term-bg) !important; }
+.leaflet-tile { filter: brightness(0.85) saturate(0.7); }
+.light .leaflet-tile { filter: brightness(1) saturate(1); }
+
+@keyframes marker-pulse {
+  0%   { transform: scale(1); opacity: 0.8; }
+  50%  { transform: scale(1.6); opacity: 0.3; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+.leaflet-marker-icon {
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+.leaflet-marker-icon:hover {
+  transform: scale(1.4) !important;
+  z-index: 1000 !important;
+  filter: brightness(1.5) drop-shadow(0 0 8px currentColor);
+}
+
+/* Leaflet popup dark */
+.leaflet-popup-content-wrapper {
+  background: var(--term-surface) !important;
+  color: #e5e7eb !important;
+  border: 1px solid var(--term-border) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+}
+.leaflet-popup-tip {
+  background: var(--term-surface) !important;
+  border: 1px solid var(--term-border) !important;
+}
+
+@keyframes quake-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(249, 115, 22, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+}
+
+/* ── Resize handle ── */
+.resize-handle {
+  width: 4px;
+  cursor: col-resize;
+  background: var(--term-border);
+  transition: background 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+.resize-handle:hover, .resize-handle:active {
+  background: #6366f1;
+  box-shadow: 0 0 12px rgba(99,102,241,0.4);
+}
+
+/* ── Dimension card hover ── */
+.dim-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.dim-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+/* ── Chart area gradient backgrounds ── */
+.recharts-surface {
+  border-radius: 8px;
+}
+
+/* ── Loading shimmer ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(99,102,241,0.08) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Light mode overrides ── */
+.light .text-gray-100 { color: #1e293b; }
+.light .text-gray-200 { color: #334155; }
+.light .text-gray-300 { color: #475569; }
+.light .text-gray-400 { color: #64748b; }
+.light .text-gray-500 { color: #94a3b8; }
+.light .text-gray-600 { color: #94a3b8; }
+.light .text-gray-700 { color: #cbd5e1; }
+.light .bg-gray-800 { background-color: #f1f5f9; }
+.light .border-gray-700 { border-color: #e2e8f0; }
+.light .bg-gray-800\/50 { background-color: rgb(241 245 249 / 0.5); }
+.light .border-gray-800\/50 { border-color: rgb(226 232 240 / 0.5); }
+.light .leaflet-popup-content-wrapper { background: #fff !important; color: #1e293b !important; border-color: #e2e8f0 !important; }
+.light .leaflet-popup-tip { background: #fff !important; border-color: #e2e8f0 !important; }
+
+/* ── Mobile responsive ── */
+@media (max-width: 640px) {
+  .card { padding: 0.75rem; }
+  header .tracking-widest { letter-spacing: 0.05em; }
+  .resize-handle { display: none; }
+}

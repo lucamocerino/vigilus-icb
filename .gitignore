@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+.ruff_cache/
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Node
+node_modules/
+frontend/dist/
+.npm/
+
+# DB / Data
+*.db
+*.sqlite
+pgdata/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+*.swp

@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type": "Feature", "properties": {"name": "Aviano AB", "type": "nato", "nation": "USA", "aircraft": "F-16"}, "geometry": {"type": "Point", "coordinates": [12.5965, 46.0319]}},
+    {"type": "Feature", "properties": {"name": "NAS Sigonella", "type": "nato", "nation": "USA", "aircraft": "P-8A, MQ-4C"}, "geometry": {"type": "Point", "coordinates": [14.9222, 37.4017]}},
+    {"type": "Feature", "properties": {"name": "Ghedi AB", "type": "nato", "nation": "ITA", "aircraft": "Tornado, F-35A"}, "geometry": {"type": "Point", "coordinates": [10.2680, 45.4320]}},
+    {"type": "Feature", "properties": {"name": "Amendola AB", "type": "nato", "nation": "ITA", "aircraft": "F-35B, MQ-9"}, "geometry": {"type": "Point", "coordinates": [15.7180, 41.5410]}},
+    {"type": "Feature", "properties": {"name": "Trapani-Birgi", "type": "nato", "nation": "ITA", "aircraft": "Eurofighter"}, "geometry": {"type": "Point", "coordinates": [12.5020, 37.9130]}},
+    {"type": "Feature", "properties": {"name": "Decimomannu AB", "type": "nato", "nation": "ITA", "aircraft": "Addestramento"}, "geometry": {"type": "Point", "coordinates": [8.9722, 39.3539]}},
+    {"type": "Feature", "properties": {"name": "Gioia del Colle", "type": "nato", "nation": "ITA", "aircraft": "Eurofighter"}, "geometry": {"type": "Point", "coordinates": [16.9330, 40.7680]}},
+    {"type": "Feature", "properties": {"name": "Pratica di Mare", "type": "nato", "nation": "ITA", "aircraft": "Vari"}, "geometry": {"type": "Point", "coordinates": [12.4490, 41.6550]}},
+    {"type": "Feature", "properties": {"name": "Istrana AB", "type": "nato", "nation": "ITA", "aircraft": "Eurofighter"}, "geometry": {"type": "Point", "coordinates": [12.0820, 45.6490]}},
+    {"type": "Feature", "properties": {"name": "Cervia AB", "type": "nato", "nation": "ITA", "aircraft": "Eurofighter"}, "geometry": {"type": "Point", "coordinates": [12.3070, 44.2220]}},
+    {"type": "Feature", "properties": {"name": "Camp Darby", "type": "nato", "nation": "USA", "aircraft": "Logistica"}, "geometry": {"type": "Point", "coordinates": [10.3400, 43.6680]}},
+    {"type": "Feature", "properties": {"name": "NSA Naples (Capodichino)", "type": "nato", "nation": "USA", "aircraft": "C2/HQ"}, "geometry": {"type": "Point", "coordinates": [14.2900, 40.8840]}},
+    {"type": "Feature", "properties": {"name": "SETAF Vicenza", "type": "army", "nation": "USA", "aircraft": "173rd Airborne"}, "geometry": {"type": "Point", "coordinates": [11.5355, 45.5456]}},
+    {"type": "Feature", "properties": {"name": "Gaeta Naval Base", "type": "navy", "nation": "USA", "aircraft": "US 6th Fleet"}, "geometry": {"type": "Point", "coordinates": [13.5723, 41.2137]}}
+  ]
+}

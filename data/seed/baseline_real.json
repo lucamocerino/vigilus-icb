@@ -1,0 +1,62 @@
+{
+  "geopolitica": {
+    "article_count": {
+      "mean": 192.308,
+      "std": 109.632
+    },
+    "negative_ratio": {
+      "mean": 0.012,
+      "std": 0.025
+    }
+  },
+  "terrorismo": {
+    "article_count": {
+      "mean": 197.308,
+      "std": 70.5
+    },
+    "negative_ratio": {
+      "mean": 0.055,
+      "std": 0.039
+    }
+  },
+  "eversione": {
+    "article_count": {
+      "mean": 230.769,
+      "std": 69.338
+    },
+    "negative_ratio": {
+      "mean": 0.014,
+      "std": 0.014
+    }
+  },
+  "sociale": {
+    "article_count": {
+      "mean": 192.308,
+      "std": 109.632
+    },
+    "negative_ratio": {
+      "mean": 0.021,
+      "std": 0.022
+    }
+  },
+  "cyber": {
+    "article_count": {
+      "mean": 156,
+      "std": 63.39
+    },
+    "negative_ratio": {
+      "mean": 0.045,
+      "std": 0.027
+    }
+  },
+  "militare": {
+    "article_count": {
+      "mean": 250,
+      "std": 1.0
+    },
+    "negative_ratio": {
+      "mean": 0.035,
+      "std": 0.043
+    }
+  }
+}

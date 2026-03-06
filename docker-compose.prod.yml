@@ -1,0 +1,79 @@
+# docker-compose.prod.yml — Produzione con HTTPS, backup, healthchecks
+# Uso: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+  backend:
+    command: uvicorn sentinella.main:app --host 0.0.0.0 --port 8000 --workers 4
+    environment:
+      DEBUG: "false"
+    volumes: []  # No volume mount in prod
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/health'); assert r.status_code == 200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+
+  frontend:
+    ports: []  # No direct port in prod (behind Caddy)
+    volumes: []
+    command: ""  # Uses default nginx from Dockerfile
+    restart: unless-stopped
+
+  db:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    restart: unless-stopped
+
+  backup:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: sentinella
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+      BACKUP_DIR: /backups
+      RETENTION_DAYS: 30
+    volumes:
+      - ./infra/backup.sh:/backup.sh:ro
+      - backups:/backups
+    entrypoint: /bin/sh
+    command: ["-c", "while true; do /backup.sh; sleep 21600; done"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+  backups:

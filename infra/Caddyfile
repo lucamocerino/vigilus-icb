@@ -1,0 +1,45 @@
+{
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$DOMAIN:localhost} {
+	# Frontend
+	handle / {
+		reverse_proxy frontend:80
+	}
+	handle /assets/* {
+		reverse_proxy frontend:80
+	}
+
+	# API
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# WebSocket
+	handle /ws/* {
+		reverse_proxy backend:8000
+	}
+
+	# Health
+	handle /health {
+		reverse_proxy backend:8000
+	}
+
+	# Metrics (internal only)
+	handle /metrics {
+		respond 403
+	}
+
+	# Security headers
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		X-XSS-Protection "1; mode=block"
+		Referrer-Policy strict-origin-when-cross-origin
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+
+	# Gzip
+	encode gzip
+}

@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type": "Feature", "properties": {"name": "Porto di Genova", "type": "port", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [8.9263, 44.4056]}},
+    {"type": "Feature", "properties": {"name": "Porto di Trieste", "type": "port", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [13.7563, 45.6495]}},
+    {"type": "Feature", "properties": {"name": "Porto di Gioia Tauro", "type": "port", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [15.8973, 38.4437]}},
+    {"type": "Feature", "properties": {"name": "Porto di Augusta", "type": "port", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [15.2269, 37.2428]}},
+    {"type": "Feature", "properties": {"name": "Porto di Taranto", "type": "port", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [17.2100, 40.4700]}},
+    {"type": "Feature", "properties": {"name": "Porto di La Spezia", "type": "port", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [9.8600, 44.1024]}},
+    {"type": "Feature", "properties": {"name": "Porto di Napoli", "type": "port", "importance": "media"}, "geometry": {"type": "Point", "coordinates": [14.2600, 40.8400]}},
+    {"type": "Feature", "properties": {"name": "Porto di Livorno", "type": "port", "importance": "media"}, "geometry": {"type": "Point", "coordinates": [10.3000, 43.5480]}},
+    {"type": "Feature", "properties": {"name": "Aeroporto Fiumicino", "type": "airport", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [12.2388, 41.8003]}},
+    {"type": "Feature", "properties": {"name": "Aeroporto Malpensa", "type": "airport", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [8.7120, 45.6280]}},
+    {"type": "Feature", "properties": {"name": "Centrale Montalto di Castro", "type": "energy", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [11.5853, 42.3542]}},
+    {"type": "Feature", "properties": {"name": "Centrale Brindisi Sud", "type": "energy", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [18.0400, 40.5800]}},
+    {"type": "Feature", "properties": {"name": "TAP Landing (Puglia)", "type": "pipeline", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [18.4300, 40.1300]}},
+    {"type": "Feature", "properties": {"name": "SNAM Terminale GNL Panigaglia", "type": "energy", "importance": "media"}, "geometry": {"type": "Point", "coordinates": [9.8500, 44.0700]}},
+    {"type": "Feature", "properties": {"name": "Terminale GNL Adriatico", "type": "energy", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [12.5900, 45.0900]}},
+    {"type": "Feature", "properties": {"name": "Cavo SAFE (Mazara del Vallo)", "type": "submarine_cable", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [12.5900, 37.6500]}},
+    {"type": "Feature", "properties": {"name": "Cavo SeaMeWe-3 (Palermo)", "type": "submarine_cable", "importance": "alta"}, "geometry": {"type": "Point", "coordinates": [13.3600, 38.1200]}},
+    {"type": "Feature", "properties": {"name": "Cavo AAE-1 (Bari)", "type": "submarine_cable", "importance": "media"}, "geometry": {"type": "Point", "coordinates": [16.8700, 41.1200]}}
+  ]
+}
