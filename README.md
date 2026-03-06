@@ -19,6 +19,10 @@
 
 [🇮🇹 Italiano](#italiano) · [🇬🇧 English](#english)
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="VIGILUS Dashboard" width="900" />
+</p>
+
 ---
 
 <a id="italiano"></a>

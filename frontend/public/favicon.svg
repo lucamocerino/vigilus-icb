@@ -1,34 +1,110 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="shield" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1"/>
-      <stop offset="100%" style="stop-color:#4f46e5"/>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#3730a3"/>
     </linearGradient>
-    <linearGradient id="eye" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#22d3ee"/>
-      <stop offset="100%" style="stop-color:#06b6d4"/>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0891b2"/>
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <linearGradient id="g3" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.2"/>
+    </linearGradient>
+    <filter id="glow1">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="shieldClip">
+      <path d="M256 42 L440 118 L440 248 C440 370 348 444 256 474 C164 444 72 370 72 248 L72 118 Z"/>
+    </clipPath>
   </defs>
-  <!-- Shield -->
-  <path d="M256 32 L448 112 L448 240 C448 368 352 448 256 480 C160 448 64 368 64 240 L64 112 Z" 
-        fill="url(#shield)" opacity="0.15" stroke="url(#shield)" stroke-width="3"/>
-  <path d="M256 56 L424 128 L424 240 C424 352 340 424 256 456 C172 424 88 352 88 240 L88 128 Z" 
-        fill="none" stroke="url(#shield)" stroke-width="1.5" opacity="0.4"/>
-  <!-- Eye of vigilance -->
-  <ellipse cx="256" cy="232" rx="96" ry="56" fill="none" stroke="url(#eye)" stroke-width="3" filter="url(#glow)"/>
-  <circle cx="256" cy="232" r="24" fill="url(#eye)" filter="url(#glow)"/>
-  <circle cx="256" cy="232" r="8" fill="#05070f"/>
-  <!-- Scan lines radiating -->
-  <line x1="256" y1="160" x2="256" y2="100" stroke="#22d3ee" stroke-width="1.5" opacity="0.5"/>
-  <line x1="192" y1="184" x2="148" y2="140" stroke="#22d3ee" stroke-width="1" opacity="0.3"/>
-  <line x1="320" y1="184" x2="364" y2="140" stroke="#22d3ee" stroke-width="1" opacity="0.3"/>
-  <!-- Italy silhouette hint (boot) -->
-  <path d="M240 300 L248 340 L260 360 L270 356 L264 340 L272 300" 
-        fill="none" stroke="#6366f1" stroke-width="2" opacity="0.6"/>
-  <!-- Text -->
-  <text x="256" y="420" text-anchor="middle" font-family="monospace" font-weight="700" font-size="48" fill="#e5e7eb" letter-spacing="12">VIGILUS</text>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="248" fill="#05070f" stroke="url(#g1)" stroke-width="2" opacity="0.6"/>
+
+  <!-- Shield outer -->
+  <path d="M256 52 L430 124 L430 244 C430 362 342 434 256 464 C170 434 82 362 82 244 L82 124 Z"
+        fill="none" stroke="url(#g1)" stroke-width="2.5" opacity="0.7"/>
+
+  <!-- Shield inner fill -->
+  <path d="M256 68 L416 134 L416 244 C416 352 336 420 256 448 C176 420 96 352 96 244 L96 134 Z"
+        fill="url(#g1)" opacity="0.08"/>
+
+  <!-- Radar grid circles -->
+  <g clip-path="url(#shieldClip)" opacity="0.15" stroke="#22d3ee" fill="none" stroke-width="0.5">
+    <circle cx="256" cy="230" r="40"/>
+    <circle cx="256" cy="230" r="80"/>
+    <circle cx="256" cy="230" r="120"/>
+    <circle cx="256" cy="230" r="160"/>
+  </g>
+
+  <!-- Radar crosshairs -->
+  <g clip-path="url(#shieldClip)" opacity="0.12" stroke="#22d3ee" stroke-width="0.5">
+    <line x1="256" y1="80" x2="256" y2="380"/>
+    <line x1="100" y1="230" x2="412" y2="230"/>
+    <line x1="146" y1="120" x2="366" y2="340"/>
+    <line x1="366" y1="120" x2="146" y2="340"/>
+  </g>
+
+  <!-- Radar sweep -->
+  <path d="M256 230 L256 90 A140 140 0 0 1 356 160 Z" fill="url(#g3)" opacity="0.15">
+    <animateTransform attributeName="transform" type="rotate" from="0 256 230" to="360 256 230" dur="6s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Eye of vigilance - outer -->
+  <ellipse cx="256" cy="230" rx="88" ry="50" fill="none" stroke="url(#g2)" stroke-width="2.5" filter="url(#glow1)"/>
+
+  <!-- Eye iris -->
+  <circle cx="256" cy="230" r="28" fill="none" stroke="url(#g2)" stroke-width="2" filter="url(#glow2)"/>
+  <circle cx="256" cy="230" r="18" fill="url(#g2)" opacity="0.8" filter="url(#glow2)"/>
+  <circle cx="256" cy="230" r="7" fill="#05070f"/>
+  <circle cx="250" cy="224" r="3" fill="white" opacity="0.6"/>
+
+  <!-- Scan beams from eye -->
+  <g opacity="0.3" stroke="url(#g2)" stroke-width="1">
+    <line x1="256" y1="178" x2="256" y2="100" stroke-dasharray="4 4"/>
+    <line x1="200" y1="195" x2="150" y2="145" stroke-dasharray="4 4"/>
+    <line x1="312" y1="195" x2="362" y2="145" stroke-dasharray="4 4"/>
+    <line x1="170" y1="230" x2="110" y2="230" stroke-dasharray="4 4"/>
+    <line x1="342" y1="230" x2="402" y2="230" stroke-dasharray="4 4"/>
+  </g>
+
+  <!-- 6 dimension dots on radar -->
+  <circle cx="256" cy="150" r="4" fill="#ef4444" filter="url(#glow2)"/>
+  <circle cx="320" cy="175" r="3.5" fill="#f59e0b" filter="url(#glow2)"/>
+  <circle cx="340" cy="240" r="3" fill="#22c55e" filter="url(#glow2)"/>
+  <circle cx="300" cy="300" r="4.5" fill="#6366f1" filter="url(#glow2)"/>
+  <circle cx="210" cy="290" r="3" fill="#06b6d4" filter="url(#glow2)"/>
+  <circle cx="180" cy="200" r="3.5" fill="#64748b" filter="url(#glow2)"/>
+
+  <!-- Italy boot silhouette -->
+  <path d="M248 310 C248 310 244 330 248 348 C250 358 258 368 264 366 C268 364 266 354 268 344 C270 334 274 320 270 310"
+        fill="none" stroke="#6366f1" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>
+
+  <!-- HUD corners -->
+  <g stroke="url(#g2)" stroke-width="1.5" opacity="0.4" fill="none">
+    <path d="M100 100 L100 80 L120 80"/>
+    <path d="M412 100 L412 80 L392 80"/>
+    <path d="M100 380 L100 400 L120 400"/>
+    <path d="M412 380 L412 400 L392 400"/>
+  </g>
+
+  <!-- Status indicators -->
+  <g font-family="monospace" font-size="9" fill="#22d3ee" opacity="0.4">
+    <text x="108" y="93">01</text>
+    <text x="392" y="93">02</text>
+    <text x="108" y="395">03</text>
+    <text x="392" y="395">04</text>
+  </g>
+
+  <!-- VIGILUS text -->
+  <text x="256" y="438" text-anchor="middle" font-family="'SF Mono','Monaco','Consolas',monospace" font-weight="700" font-size="36" fill="#e5e7eb" letter-spacing="10" filter="url(#glow2)">VIGILUS</text>
+  <text x="256" y="458" text-anchor="middle" font-family="'SF Mono','Monaco','Consolas',monospace" font-weight="400" font-size="10" fill="#22d3ee" letter-spacing="6" opacity="0.6">ITALY CRISIS BOARD</text>
 </svg>
