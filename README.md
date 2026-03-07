@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://vigilus-frontend.onrender.com"><img src="https://img.shields.io/badge/🔴_LIVE_DEMO-vigilus--frontend.onrender.com-indigo?style=for-the-badge" alt="Live Demo" /></a>
+  <a href="https://vigilus-frontend.onrender.com"><img src="https://img.shields.io/badge/🔴_LIVE_DEMO-vigilus.onrender.com-indigo?style=for-the-badge" alt="Live Demo" /></a>
 </p>
 
 <p align="center">
@@ -21,248 +21,174 @@
   <img src="https://img.shields.io/badge/Coverage-69%25-yellow.svg" alt="Coverage" />
 </p>
 
-[🇮🇹 Italiano](#italiano) · [🇬🇧 English](#english)
-
 <p align="center">
   <img src="docs/screenshot.png" alt="VIGILUS Dashboard" width="900" />
 </p>
 
 ---
 
+[🇮🇹 Italiano](#italiano) · [🇬🇧 English](#english)
+
 <a id="italiano"></a>
 
 ## 🇮🇹 Italiano
 
-Dashboard OSINT open source per il monitoraggio della situazione di sicurezza nazionale italiana, basata esclusivamente su dati pubblici.
+Dashboard OSINT open source per il monitoraggio della sicurezza nazionale italiana. Layout Bloomberg terminal con mappa operativa e pannelli intelligence. Basata esclusivamente su dati pubblici.
 
-> **NON è un livello di allerta ufficiale.** Aggrega anomalie statistiche su proxy pubblici. In caso di emergenza seguire le autorità competenti (112, Protezione Civile).
-
----
+> **⚠️ NON è un livello di allerta ufficiale.** Aggrega anomalie statistiche su proxy pubblici.
 
 ### Stack
 
 | Layer | Tecnologie |
 |---|---|
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2.0, APScheduler, spaCy, Alembic |
-| Frontend | React 18, Vite, Recharts, Leaflet, Tailwind CSS, Transformers.js |
-| Database | SQLite (dev) / PostgreSQL 16 (prod) |
-| Infra | Docker Compose, GitHub Actions CI/CD |
-| Sicurezza | API key auth, rate limiting, CORS configurabile |
-| Intelligence | ML browser-side (sentiment + threat), Headline Memory RAG (IndexedDB) |
-| Licenza | AGPL-3.0 |
-
----
+| Frontend | React 18, Vite, Recharts, Leaflet, Tailwind CSS |
+| Database | SQLite (dev) / PostgreSQL 16 (prod via Supabase/Render) |
+| Infra | Render, Docker Compose, Caddy HTTPS, GitHub Actions CI/CD |
+| Sicurezza | API key auth, rate limiting, CORS, security headers, Sentry |
+| Intelligence | ML browser-side (threat + sentiment), Headline Memory RAG (IndexedDB) |
+| Monitoring | Prometheus `/metrics`, structured JSON logging |
 
 ### Funzionalità
 
-#### Dashboard principale
-- **Score composito 0–100** — media pesata di 6 dimensioni (geopolitica, terrorismo, cyber, eversione, militare, sociale)
-- **Radar plot** — visualizzazione a 6 assi delle dimensioni
-- **Heatmap 7gg** — matrice temporale dell'andamento score
-- **News ticker** — titoli scrollanti da 50+ feed RSS italiani in tempo reale
-- **Trending keywords** — spike detection con z-score (rolling 2h vs baseline 7gg)
-- **Anomalie z-score** — proxy che superano 1.5σ dalla baseline
+**Layout Bloomberg Terminal**
+- Mappa operativa a sinistra (60%) con 6 data layer toggle e resize drag handle
+- Pannelli intelligence a destra (40%) scrollabili
+- News ticker scrollante da 42+ feed RSS italiani
+- Score bar con indice composito + 6 dimensioni in tempo reale
 
-#### Intelligence (browser-side)
-- **Headline Memory (RAG)** — indice semantico locale di 5.000 headline in IndexedDB, ricerca tipo "quando è stata l'ultima crisi Iran?"
-- **ML Classifier** — threat detection + sentiment analysis in Web Worker, zero chiamate server
-- **Keyword Monitor** — alert personalizzabili su parole chiave, persistenza localStorage
+**Score & Dimensioni**
+- Indice composito 0–100 — media pesata di 6 dimensioni via z-score vs baseline 90gg
+- Geopolitica (25%) · Terrorismo (20%) · Cyber (15%) · Eversione (15%) · Militare (15%) · Sociale (10%)
+- 🟢 CALMO · 🔵 NORMALE · 🟡 ATTENZIONE · 🟠 ELEVATO · 🔴 CRITICO
 
-#### Mappa operativa
-- **Eventi geo-taggati** — NER spaCy su notizie RSS, posizionati su mappa Leaflet dark
-- **Data layer toggle** — 14 basi militari NATO/USA ★, 18 infrastrutture critiche (porti ⚓, aeroporti ✈, centrali ⚡, cavi sottomarini 🔵)
-- **Breakdown regionale** — aggregazione Nord/Centro/Sud con intensità
+**Mappa Operativa — 6 Layer**
+- Eventi geo-taggati via NER spaCy
+- 14 basi militari NATO/USA (Aviano, Sigonella, Ghedi, Camp Darby...)
+- 18 infrastrutture critiche (porti, aeroporti, centrali, cavi sottomarini, TAP)
+- Terremoti INGV ultimi 7gg (M2+)
+- Voli militari ADS-B (OpenSky Network)
+- Convergenza geografica multi-dimensione
 
-#### Strumenti
-- **⌘K Command palette** — ricerca fuzzy su comandi, dimensioni, fonti
-- **Confronto periodi** — settimana/mese/trimestre con delta per dimensione
-- **Export CSV/Report** — download dati storici e report strutturato
-- **Condivisione** — bottoni Twitter, Telegram, WhatsApp
-- **Narrativa AI** — sintesi Claude con context score + anomalie + CSIRT
-- **WebSocket** — aggiornamenti real-time dello score
+**Intelligence Browser-Side**
+- Headline Memory (RAG) — 5.000 headline in IndexedDB, ricerca semantica
+- ML Classifier — threat detection + sentiment in Web Worker
+- Keyword Monitor — alert personalizzabili con localStorage
+- Trending keywords — spike detection z-score (2h rolling vs 7gg baseline)
 
----
+**OSINT & Data — 8 Collector + 42 RSS**
+- ANSA, AGI, Adnkronos, Repubblica, Corriere, Sole24Ore, Difesa Online, Formiche, CSIRT, Red Hot Cyber, Reuters, BBC...
+- GDELT, CSIRT Italia, Google Trends, ACLED, OpenSky ADS-B, INGV
+- Hotspot escalation con trend 48h
+- Cross-stream correlation (Pearson) + alert spike simultanei
+- Dossier regionale (14 regioni italiane)
+- Prediction markets (8 scenari geopolitici)
+- Outage monitor (TIM, Vodafone, Enel, SPID...)
+- Daily digest automatico 24h
+
+**Strumenti**
+- ⌘K Command palette — fuzzy search
+- Dark/Light theme con glassmorphism
+- IT/EN toggle lingua
+- Confronto periodi (settimana/mese/trimestre)
+- Export CSV/Report
+- Condivisione Twitter, Telegram, WhatsApp
+- TG Live (Sky TG24, Rai News 24, TGCOM24)
+- Narrativa AI (Claude, opzionale)
+- WebSocket real-time + URL state sharing
+- PWA installabile + pannelli ridimensionabili
 
 ### Avvio rapido
 
-#### Backend
-
 ```bash
+# Backend
 cd backend
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+pip install ".[dev]"
 python -m spacy download it_core_news_sm
-uvicorn vigilus.main:app --reload
-```
+uvicorn sentinella.main:app --reload    # http://localhost:8000
 
-API su `http://localhost:8000` — docs su `http://localhost:8000/docs`
-
-#### Frontend
-
-```bash
+# Frontend
 cd frontend
-npm install
-npm run dev
+npm install && npm run dev              # http://localhost:3000
+
+# Docker (tutto insieme)
+cp .env.example .env && docker compose up -d
 ```
 
-UI su `http://localhost:3000`
-
-#### Docker Compose
-
-```bash
-cp .env.example .env
-docker compose up -d
-```
-
-#### Test
+### Test
 
 ```bash
 cd backend
-python -m pytest tests/ -v --cov=vigilus   # 102 test
+python -m pytest tests/ -v --cov=sentinella
+# 176 test · 69% coverage · 0 lint errors
 ```
 
----
-
-### Fonti dati (7 collector + 50 RSS)
+### Fonti dati
 
 | Fonte | Dati | Cache |
 |---|---|---|
-| **Mega RSS** (50+ feed) | ANSA, AGI, Adnkronos, Repubblica, Corriere, Sole24Ore, Difesa Online, Formiche, CSIRT, Red Hot Cyber, Reuters, BBC... | 15min |
+| **Mega RSS** (42+ feed) | Agenzie, quotidiani, difesa, cyber, geopolitica | 15min |
 | GDELT Project | Articoli internazionali, negatività | 1h |
-| CSIRT Italia | Bollettini cyber, CVE, alert infrastrutture | 30min |
-| Google Trends | Interesse pubblico su termini chiave | 24h |
-| ACLED | Proteste e scontri geo-localizzati | 7gg |
-| OpenSky Network | Voli militari su basi italiane (ADS-B) | 1h |
-| ANSA RSS + NER | Notizie geo-taggate con spaCy | ogni ciclo |
+| CSIRT Italia | Bollettini cyber, CVE, infrastrutture | 30min |
+| Google Trends | Termini chiave italiani | 24h |
+| ACLED | Proteste e scontri Italia | 7gg |
+| OpenSky Network | Voli militari su 5 basi ADS-B | 1h |
+| INGV | Terremoti M2+ ultimi 7gg | 30min |
 
----
+### API (32 endpoint)
 
-### Score
-
-Indice composito 0–100, media pesata di 6 dimensioni normalizzate via z-score vs baseline rolling 90 giorni:
-
-| Dimensione | Peso | Fonti |
-|---|---|---|
-| Geopolitica | 25% | GDELT, militare |
-| Terrorismo | 20% | GDELT, Google Trends |
-| Cyber | 15% | CSIRT, GDELT |
-| Eversione | 15% | GDELT, ACLED, RSS |
-| Militare | 15% | ADS-B, GDELT, Trends |
-| Sociale | 10% | GDELT, Trends, ACLED |
-
-| Score | Livello |
-|---|---|
-| 0–20 | 🟢 CALMO |
-| 21–40 | 🔵 NORMALE |
-| 41–60 | 🟡 ATTENZIONE |
-| 61–80 | 🟠 ELEVATO |
-| 81–100 | 🔴 CRITICO |
-
----
-
-### API (22 endpoint)
+<details>
+<summary>Lista completa endpoint</summary>
 
 ```
 GET  /api/score/current              score + dimensioni + confidence
 GET  /api/score/history              storico (?days=30)
 GET  /api/score/anomalies            proxy con |z| >= 1.5σ
-GET  /api/score/compare              confronto periodi (?period=week|month|quarter)
-GET  /api/score/narrative            sintesi AI (Claude)
-POST /api/score/trigger              forza ricalcolo
+GET  /api/score/compare              confronto periodi
+GET  /api/score/correlations         correlazioni cross-stream
+GET  /api/score/narrative            sintesi AI
+POST /api/score/trigger              forza ricalcolo (solo debug)
 GET  /api/dimension/{name}           dettaglio dimensione
 GET  /api/dimension/{name}/history   storico dimensione
 GET  /api/events/latest              eventi classificati
-GET  /api/headlines                  titoli per ticker (50+ fonti)
-GET  /api/trending                   keywords con spike detection
+GET  /api/events/search              full-text search
+GET  /api/headlines                  titoli ticker (42+ fonti)
+GET  /api/trending                   keywords spike detection
+GET  /api/hotspots                   escalation per dimensione
+GET  /api/predictions                prediction markets
+GET  /api/outages                    stato infrastrutture digitali
+GET  /api/digest/daily               riepilogo 24h
+GET  /api/earthquakes                terremoti INGV
+GET  /api/flights                    voli militari ADS-B
+GET  /api/region/{name}              dossier regionale
 GET  /api/map/events                 eventi geo-taggati NER
 GET  /api/map/regional               breakdown Nord/Centro/Sud
-GET  /api/layers/military            GeoJSON basi militari
-GET  /api/layers/infrastructure      GeoJSON infrastrutture critiche
+GET  /api/map/convergence            convergenza multi-dimensione
+GET  /api/layers/military            GeoJSON 14 basi NATO
+GET  /api/layers/infrastructure      GeoJSON 18 infrastrutture
 GET  /api/layers/all                 tutti i data layer
-GET  /api/export/csv                 download CSV storico
-GET  /api/export/report              report JSON strutturato
-GET  /api/sources/status             stato fonti dati
+GET  /api/export/csv                 download CSV
+GET  /api/export/report              report JSON
+GET  /api/sources/status             stato fonti
 GET  /api/cache/status               cache collector
-GET  /api/methodology                documentazione pesi e dimensioni
+GET  /api/methodology                documentazione
 GET  /health                         health check
-WS   /ws/score                       aggiornamenti real-time
+GET  /metrics                        Prometheus metrics
+WS   /ws/score                       WebSocket real-time
 ```
+</details>
 
-Auth: header `X-API-Key` quando `API_KEY` è configurato. Pubblici: `/health`, `/docs`, `/api/methodology`.
+### Deploy
 
----
+Il progetto è deployato su **Render** (backend + frontend) con **PostgreSQL** (Render DB free).
 
-### Struttura repository
-
+```bash
+# Self-hosted con Docker
+cp .env.production.example .env
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose exec backend alembic upgrade head
 ```
-italy-security-board/
-├── .github/workflows/ci.yml        CI: test, lint, build, Docker
-├── backend/
-│   ├── migrations/                  Alembic (async)
-│   ├── vigilus/
-│   │   ├── api/                     22 endpoint FastAPI
-│   │   │   ├── score.py             score, history, anomalies, trigger
-│   │   │   ├── compare.py           confronto periodi
-│   │   │   ├── export.py            CSV + report
-│   │   │   ├── headlines.py         titoli per ticker
-│   │   │   ├── trending.py          spike detection keywords
-│   │   │   ├── layers.py            data layer GeoJSON
-│   │   │   ├── regional.py          breakdown regionale
-│   │   │   └── ...                  dimensions, events, narrative, map, sources, cache, methodology, websocket
-│   │   ├── collectors/              7 collector (GDELT, RSS, MegaRSS, CSIRT, Trends, ACLED, ADS-B)
-│   │   ├── engine/                  score, dimensions, normalizer, baseline, trending
-│   │   ├── middleware/              auth (API key) + rate limiting
-│   │   ├── models/                  SQLAlchemy (ScoreSnapshot, DimensionScore, Event, SourceStatus)
-│   │   └── scripts/                 seed_baseline.py
-│   └── tests/                       102 test
-├── frontend/src/
-│   ├── components/                  22 componenti
-│   │   ├── ScoreGauge.jsx           gauge circolare 0-100
-│   │   ├── RadarPlot.jsx            radar 6 assi
-│   │   ├── NewsTicker.jsx           ticker scrollante 50+ feed
-│   │   ├── TrendingKeywords.jsx     spike keywords z-score
-│   │   ├── MapView.jsx              mappa + data layer toggle
-│   │   ├── HeadlineMemory.jsx       RAG search (IndexedDB)
-│   │   ├── MLClassifier.jsx         threat + sentiment (Web Worker)
-│   │   ├── KeywordMonitor.jsx       alert personalizzabili
-│   │   ├── CommandPalette.jsx       ⌘K fuzzy search
-│   │   ├── ComparisonView.jsx       confronto periodi
-│   │   ├── ShareButtons.jsx         condivisione social
-│   │   └── ...                      Timeline, Heatmap, Anomalies, DimensionCard/Modal, NarrativeBox, EventFeed, SourceStatus, RegionalBreakdown, ExportButtons, ErrorBoundary
-│   ├── services/headlineMemory.js   IndexedDB RAG engine
-│   ├── workers/ml-worker.js         Web Worker ML
-│   ├── hooks/                       useScore, useWebSocket, useDimension
-│   └── utils/                       colors, format
-├── data/
-│   ├── geojson/                     military_bases.json, infrastructure.json
-│   └── seed/baseline_real.json      baseline 90gg
-├── docker-compose.yml
-├── .env.example
-└── .env.production.example
-```
-
----
-
-### Deploy in produzione
-
-1. Copia `.env.production.example` → `.env`
-2. Genera API key: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
-3. `docker compose up -d`
-4. `docker compose exec backend alembic upgrade head`
-5. (Opzionale) `docker compose exec backend python -m vigilus.scripts.seed_baseline`
-
-**Checklist:** `DEBUG=false` · `API_KEY` configurata · `CORS_ORIGINS` dominio reale · `RATE_LIMIT_PER_MINUTE=60` · PostgreSQL · HTTPS · Backup DB
-
----
-
-### Limitazioni
-
-- GDELT copre prevalentemente fonti in lingua inglese
-- Google Trends: rate limit aggressivo (cache 24h)
-- OpenSky free tier: ~100 richieste/giorno
-- Baseline va rigenerata ogni 3 mesi
-- Lo score riflette anomalie statistiche, non valutazioni di intelligence
-- ML browser-side usa classificazione keyword-based (no modello ONNX pesante)
 
 ---
 
@@ -270,182 +196,41 @@ italy-security-board/
 
 ## 🇬🇧 English
 
-Open source OSINT dashboard for monitoring Italy's national security situation, based exclusively on public data.
+Open source OSINT dashboard for monitoring Italy's national security. Bloomberg terminal-style layout with operational map and intelligence panels. Based exclusively on public data.
 
-> **NOT an official alert level.** Aggregates statistical anomalies from public proxies. In case of emergency, follow competent authorities (112, Civil Protection).
-
----
-
-### Stack
-
-| Layer | Technologies |
-|---|---|
-| Backend | Python 3.12, FastAPI, SQLAlchemy 2.0, APScheduler, spaCy, Alembic |
-| Frontend | React 18, Vite, Recharts, Leaflet, Tailwind CSS, Transformers.js |
-| Database | SQLite (dev) / PostgreSQL 16 (prod) |
-| Infra | Docker Compose, GitHub Actions CI/CD |
-| Security | API key auth, rate limiting, configurable CORS |
-| Intelligence | Browser-side ML (sentiment + threat), Headline Memory RAG (IndexedDB) |
-| License | AGPL-3.0 |
-
----
+> **⚠️ NOT an official alert level.** Aggregates statistical anomalies from public proxies.
 
 ### Features
 
-#### Main Dashboard
-- **Composite score 0–100** — weighted average of 6 dimensions (geopolitics, terrorism, cyber, subversion, military, social)
-- **Radar plot** — 6-axis dimension visualization
-- **7-day heatmap** — temporal score matrix
-- **News ticker** — scrolling headlines from 50+ Italian RSS feeds in real-time
-- **Trending keywords** — spike detection with z-score (2h rolling window vs 7-day baseline)
-- **Z-score anomalies** — proxies exceeding 1.5σ from baseline
+- **Composite score 0–100** across 6 security dimensions with z-score normalization
+- **Operational map** with 6 toggleable data layers (NATO bases, infrastructure, earthquakes, flights, convergence)
+- **42+ Italian RSS feeds** with trending keyword spike detection
+- **Browser-side ML** — threat classification + sentiment analysis in Web Worker
+- **Headline Memory RAG** — 5,000 headlines indexed in IndexedDB for semantic search
+- **Cross-stream correlation** — Pearson across dimensions, simultaneous spike alerts
+- **Regional briefs** for 14 Italian regions
+- **Live TV** — Sky TG24, Rai News 24, TGCOM24
+- **⌘K Command palette**, dark/light theme, IT/EN, PWA, resizable panels
+- **32 API endpoints**, 176 tests, 69% coverage
 
-#### Intelligence (browser-side)
-- **Headline Memory (RAG)** — local semantic index of 5,000 headlines in IndexedDB, search like "when was the last Iran crisis?"
-- **ML Classifier** — threat detection + sentiment analysis in Web Worker, zero server calls
-- **Keyword Monitor** — custom keyword alerts with localStorage persistence
+### Data Sources
 
-#### Operational Map
-- **Geo-tagged events** — spaCy NER on RSS articles, plotted on dark Leaflet map
-- **Toggleable data layers** — 14 NATO/US military bases ★, 18 critical infrastructure (ports ⚓, airports ✈, power plants ⚡, submarine cables 🔵)
-- **Regional breakdown** — North/Center/South aggregation with intensity
-
-#### Tools
-- **⌘K Command palette** — fuzzy search across commands, dimensions, sources
-- **Period comparison** — week/month/quarter with per-dimension delta
-- **CSV/Report export** — download historical data and structured report
-- **Social sharing** — Twitter, Telegram, WhatsApp buttons
-- **AI Narrative** — Claude synthesis with score context + anomalies + CSIRT
-- **WebSocket** — real-time score updates
-
----
+8 collectors + 42 RSS feeds: GDELT, CSIRT Italia, ACLED, Google Trends, OpenSky ADS-B, INGV earthquakes, ANSA, AGI, Adnkronos, Repubblica, Corriere, defense & cyber specialized feeds.
 
 ### Quick Start
 
-#### Backend
-
 ```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-python -m spacy download it_core_news_sm
-uvicorn vigilus.main:app --reload
+cd backend && python -m venv .venv && source .venv/bin/activate
+pip install ".[dev]" && python -m spacy download it_core_news_sm
+uvicorn sentinella.main:app --reload
+
+cd frontend && npm install && npm run dev
 ```
 
-API at `http://localhost:8000` — docs at `http://localhost:8000/docs`
+### Stack
 
-#### Frontend
+FastAPI · React 18 · SQLAlchemy 2.0 · Leaflet · Tailwind CSS · PostgreSQL · Render · GitHub Actions
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### License
 
-UI at `http://localhost:3000`
-
-#### Docker Compose
-
-```bash
-cp .env.example .env
-docker compose up -d
-```
-
-#### Tests
-
-```bash
-cd backend
-python -m pytest tests/ -v --cov=vigilus   # 102 tests
-```
-
----
-
-### Data Sources (7 collectors + 50 RSS feeds)
-
-| Source | Data | Cache |
-|---|---|---|
-| **Mega RSS** (50+ feeds) | ANSA, AGI, Adnkronos, Repubblica, Corriere, Sole24Ore, Difesa Online, Formiche, CSIRT, Red Hot Cyber, Reuters, BBC... | 15min |
-| GDELT Project | International articles, negativity ratios | 1h |
-| CSIRT Italia | Cyber bulletins, CVEs, infrastructure alerts | 30min |
-| Google Trends | Public interest on key terms | 24h |
-| ACLED | Geo-located protests and clashes | 7d |
-| OpenSky Network | Military flights over Italian bases (ADS-B) | 1h |
-| ANSA RSS + NER | Geo-tagged news via spaCy | each cycle |
-
----
-
-### Score
-
-Composite index 0–100, weighted average of 6 z-score normalized dimensions vs 90-day rolling baseline:
-
-| Dimension | Weight | Sources |
-|---|---|---|
-| Geopolitics | 25% | GDELT, military |
-| Terrorism | 20% | GDELT, Google Trends |
-| Cyber | 15% | CSIRT, GDELT |
-| Subversion | 15% | GDELT, ACLED, RSS |
-| Military | 15% | ADS-B, GDELT, Trends |
-| Social | 10% | GDELT, Trends, ACLED |
-
-| Score | Level |
-|---|---|
-| 0–20 | 🟢 CALM |
-| 21–40 | 🔵 NORMAL |
-| 41–60 | 🟡 ATTENTION |
-| 61–80 | 🟠 ELEVATED |
-| 81–100 | 🔴 CRITICAL |
-
----
-
-### API (22 endpoints)
-
-```
-GET  /api/score/current              current score + dimensions + confidence
-GET  /api/score/history              historical (?days=30)
-GET  /api/score/anomalies            proxies with |z| >= 1.5σ
-GET  /api/score/compare              period comparison (?period=week|month|quarter)
-GET  /api/score/narrative            AI synthesis (Claude)
-POST /api/score/trigger              force recalculation
-GET  /api/dimension/{name}           dimension detail
-GET  /api/dimension/{name}/history   dimension history
-GET  /api/events/latest              classified events
-GET  /api/headlines                  ticker headlines (50+ sources)
-GET  /api/trending                   keywords with spike detection
-GET  /api/map/events                 NER geo-tagged events
-GET  /api/map/regional               North/Center/South breakdown
-GET  /api/layers/military            military bases GeoJSON
-GET  /api/layers/infrastructure      critical infrastructure GeoJSON
-GET  /api/layers/all                 all data layers
-GET  /api/export/csv                 CSV historical download
-GET  /api/export/report              structured JSON report
-GET  /api/sources/status             data source health
-GET  /api/cache/status               collector cache
-GET  /api/methodology                dimension weights documentation
-GET  /health                         health check
-WS   /ws/score                       real-time updates
-```
-
-Auth: `X-API-Key` header when `API_KEY` is set. Public: `/health`, `/docs`, `/api/methodology`.
-
----
-
-### Production Deployment
-
-1. Copy `.env.production.example` → `.env`
-2. Generate API key: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
-3. `docker compose up -d`
-4. `docker compose exec backend alembic upgrade head`
-5. (Optional) `docker compose exec backend python -m vigilus.scripts.seed_baseline`
-
-**Checklist:** `DEBUG=false` · `API_KEY` set · `CORS_ORIGINS` with real domain · `RATE_LIMIT_PER_MINUTE=60` · PostgreSQL · HTTPS · DB backups
-
----
-
-### Limitations
-
-- GDELT primarily covers English-language sources
-- Google Trends: aggressive rate limiting (24h cache)
-- OpenSky free tier: ~100 requests/day
-- Baseline should be regenerated every 3 months
-- Score reflects statistical anomalies, not intelligence assessments
-- Browser-side ML uses keyword-based classification (no heavy ONNX model)
+AGPL-3.0
