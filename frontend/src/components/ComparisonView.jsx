@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ArrowUpRight, ArrowDownRight, Minus, TrendingUp } from 'lucide-react'
+import { apiUrl } from '../utils/api.js'
 
 const PERIOD_OPTIONS = [
   { value: 'week',    label: 'Settimana' },
@@ -39,7 +40,7 @@ export default function ComparisonView() {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/score/compare?period=${period}`)
+    fetch(apiUrl(`/api/score/compare?period=${period}`))
       .then(r => r.json())
       .then(d => setData(d))
       .catch(() => setData(null))

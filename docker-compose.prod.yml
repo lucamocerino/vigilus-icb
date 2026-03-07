@@ -38,8 +38,8 @@ services:
           cpus: "1.0"
 
   frontend:
-    ports: []  # No direct port in prod (behind Caddy)
-    volumes: []
+    ports: !override []  # No direct port in prod (behind Caddy)
+    volumes: !override []
     command: ""  # Uses default nginx from Dockerfile
     restart: unless-stopped
 

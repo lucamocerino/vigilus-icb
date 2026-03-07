@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY pyproject.toml .
 COPY sentinella/ sentinella/
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir .
 
 # Scarica modello spaCy italiano
 RUN python -m spacy download it_core_news_sm

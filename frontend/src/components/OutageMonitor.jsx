@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Wifi, WifiOff, CheckCircle } from 'lucide-react'
+import { apiUrl } from '../utils/api.js'
 
 const TYPE_ICONS = {
   telecom: '📡',
@@ -12,7 +13,7 @@ export default function OutageMonitor() {
   const [services, setServices] = useState([])
 
   useEffect(() => {
-    fetch('/api/outages').then(r => r.json()).then(setServices).catch(() => {})
+    fetch(apiUrl('/api/outages')).then(r => r.json()).then(setServices).catch(() => {})
   }, [])
 
   if (!services.length) return null

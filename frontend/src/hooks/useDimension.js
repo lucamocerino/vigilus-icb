@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiUrl } from '../utils/api.js'
 
 export function useDimension(name) {
   const [data, setData] = useState(null)
@@ -6,7 +7,7 @@ export function useDimension(name) {
 
   useEffect(() => {
     if (!name) return
-    fetch(`/api/dimension/${name}`)
+    fetch(apiUrl(`/api/dimension/${name}`))
       .then(r => r.json())
       .then(d => {
         setData(d)

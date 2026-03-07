@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, X } from 'lucide-react'
 import { DIMENSION_COLORS, DIMENSION_LABELS } from '../utils/colors.js'
+import { apiUrl } from '../utils/api.js'
 
 const DIMENSIONS = ['geopolitica', 'terrorismo', 'cyber', 'eversione', 'militare', 'sociale']
 
@@ -86,7 +87,7 @@ export default function CommandPalette({ onNavigate, onDimension }) {
       case 'dimension': onDimension?.(cmd.value); break
       case 'url': window.open(cmd.value, '_blank'); break
       case 'link': window.open(cmd.value, '_blank'); break
-      case 'trigger': fetch('/api/score/trigger', { method: 'POST' }); break
+      case 'trigger': fetch(apiUrl('/api/score/trigger'), { method: 'POST' }); break
       case 'share': {
         const text = `🛡️ Sentinella Italia — Dashboard OSINT sicurezza nazionale`
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank')

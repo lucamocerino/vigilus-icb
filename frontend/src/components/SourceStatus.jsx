@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { formatDate } from '../utils/format.js'
+import { apiUrl } from '../utils/api.js'
 
 export default function SourceStatus() {
   const [sources, setSources] = useState([])
 
   useEffect(() => {
-    fetch('/api/sources/status')
+    fetch(apiUrl('/api/sources/status'))
       .then(r => r.json())
       .then(setSources)
       .catch(() => {})

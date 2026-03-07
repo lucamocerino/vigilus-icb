@@ -3,14 +3,6 @@
 }
 
 {$DOMAIN:localhost} {
-	# Frontend
-	handle / {
-		reverse_proxy frontend:80
-	}
-	handle /assets/* {
-		reverse_proxy frontend:80
-	}
-
 	# API
 	handle /api/* {
 		reverse_proxy backend:8000
@@ -29,6 +21,11 @@
 	# Metrics (internal only)
 	handle /metrics {
 		respond 403
+	}
+
+	# Catch-all: serve frontend for all other routes (SPA)
+	handle {
+		reverse_proxy frontend:80
 	}
 
 	# Security headers

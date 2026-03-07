@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, Sparkles } from 'lucide-react'
 import { DIMENSION_LABELS, DIMENSION_COLORS, getLevel } from '../utils/colors.js'
+import { apiUrl } from '../utils/api.js'
 
 const DIMENSION_ORDER = ['geopolitica', 'terrorismo', 'cyber', 'eversione', 'militare', 'sociale']
 
@@ -13,7 +14,7 @@ export default function NarrativeBox({ score, scoreTrend, dimensions }) {
   // Controlla se esiste già un testo in cache — senza generarne uno nuovo
   useEffect(() => {
     if (score == null) return
-    fetch('/api/score/narrative')
+    fetch(apiUrl('/api/score/narrative'))
       .then(r => r.json())
       .then(data => {
         // Mostra solo se già esistente (cached o API key configurata e già chiamata)
@@ -25,7 +26,7 @@ export default function NarrativeBox({ score, scoreTrend, dimensions }) {
   async function generate() {
     setLoading(true)
     try {
-      const r = await fetch('/api/score/narrative')
+      const r = await fetch(apiUrl('/api/score/narrative'))
       const data = await r.json()
       setNarrative(data)
     } catch {

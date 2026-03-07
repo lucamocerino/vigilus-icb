@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Marker, Popup, useMap } from 're
 import { DIMENSION_COLORS, DIMENSION_LABELS } from '../utils/colors.js'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { apiUrl } from '../utils/api.js'
 
 // Force Leaflet to recalculate size when container resizes
 function ResizeHandler() {
@@ -56,14 +57,14 @@ export default function MapView() {
   const [convergenceData, setConvergenceData] = useState(null)
 
   useEffect(() => {
-    fetch('/api/map/events').then(r => r.json()).then(setEvents).catch(() => {})
-    fetch('/api/layers/all').then(r => r.json()).then(data => {
+    fetch(apiUrl('/api/map/events')).then(r => r.json()).then(setEvents).catch(() => {})
+    fetch(apiUrl('/api/layers/all')).then(r => r.json()).then(data => {
       setMilitaryData(data.military)
       setInfraData(data.infrastructure)
     }).catch(() => {})
-    fetch('/api/earthquakes').then(r => r.json()).then(setQuakeData).catch(() => {})
-    fetch('/api/flights').then(r => r.json()).then(setFlightData).catch(() => {})
-    fetch('/api/map/convergence').then(r => r.json()).then(setConvergenceData).catch(() => {})
+    fetch(apiUrl('/api/earthquakes')).then(r => r.json()).then(setQuakeData).catch(() => {})
+    fetch(apiUrl('/api/flights')).then(r => r.json()).then(setFlightData).catch(() => {})
+    fetch(apiUrl('/api/map/convergence')).then(r => r.json()).then(setConvergenceData).catch(() => {})
   }, [])
 
   const toggleLayer = (key) => setLayers(prev => ({ ...prev, [key]: !prev[key] }))

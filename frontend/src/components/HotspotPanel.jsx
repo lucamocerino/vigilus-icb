@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Activity, AlertTriangle, TrendingUp } from 'lucide-react'
+import { apiUrl } from '../utils/api.js'
 
 const LEVEL_STYLE = {
   critico: 'bg-red-500/15 text-red-400 border-red-500/30',
@@ -12,8 +13,8 @@ export default function HotspotPanel() {
   const [correlations, setCorrelations] = useState(null)
 
   useEffect(() => {
-    fetch('/api/hotspots').then(r => r.json()).then(setHotspots).catch(() => {})
-    fetch('/api/score/correlations?hours=48').then(r => r.json()).then(setCorrelations).catch(() => {})
+    fetch(apiUrl('/api/hotspots')).then(r => r.json()).then(setHotspots).catch(() => {})
+    fetch(apiUrl('/api/score/correlations?hours=48')).then(r => r.json()).then(setCorrelations).catch(() => {})
   }, [])
 
   return (

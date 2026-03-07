@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { MapPin, ChevronRight } from 'lucide-react'
 import { DIMENSION_COLORS } from '../utils/colors.js'
+import { apiUrl } from '../utils/api.js'
 
 const REGIONS = [
   'lombardia','lazio','campania','sicilia','veneto','piemonte',
@@ -17,7 +18,7 @@ export default function RegionBrief() {
     setSelected(name)
     setLoading(true)
     try {
-      const resp = await fetch(`/api/region/${name}`)
+      const resp = await fetch(apiUrl(`/api/region/${name}`))
       const data = await resp.json()
       setBrief(data)
     } catch { setBrief(null) }

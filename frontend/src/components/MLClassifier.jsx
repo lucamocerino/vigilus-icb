@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Cpu, Loader } from 'lucide-react'
 import { DIMENSION_COLORS } from '../utils/colors.js'
+import { apiUrl } from '../utils/api.js'
 
 const THREAT_COLORS = {
   critical: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'CRITICO' },
@@ -91,7 +92,7 @@ export default function MLClassifier() {
   async function runClassification() {
     setStatus('loading')
     try {
-      const resp = await fetch('/api/headlines')
+      const resp = await fetch(apiUrl('/api/headlines'))
       const headlines = await resp.json()
       if (!headlines?.length) { setStatus('idle'); return }
 

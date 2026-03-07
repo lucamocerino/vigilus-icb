@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Zap } from 'lucide-react'
+import { apiUrl } from '../utils/api.js'
 
 const CATEGORY_COLORS = {
   geopolitica: 'text-indigo-400',
@@ -14,7 +15,7 @@ export default function PredictionMarkets() {
   const [predictions, setPredictions] = useState([])
 
   useEffect(() => {
-    fetch('/api/predictions').then(r => r.json()).then(setPredictions).catch(() => {})
+    fetch(apiUrl('/api/predictions')).then(r => r.json()).then(setPredictions).catch(() => {})
   }, [])
 
   if (!predictions.length) return null

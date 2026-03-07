@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { wsUrl } from '../utils/api.js'
 
 export function useWebSocket(onMessage) {
   const wsRef = useRef(null)
@@ -6,8 +7,8 @@ export function useWebSocket(onMessage) {
 
   useEffect(() => {
     function connect() {
-      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-      const ws = new WebSocket(`${protocol}://${window.location.host}/ws/score`)
+      const url = wsUrl('/ws/score')
+      const ws = new WebSocket(url)
       wsRef.current = ws
 
       ws.onmessage = (event) => {

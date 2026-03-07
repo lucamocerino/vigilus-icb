@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { FileText, TrendingUp, AlertTriangle } from 'lucide-react'
+import { apiUrl } from '../utils/api.js'
 
 export default function DailyDigest() {
   const [digest, setDigest] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/digest/daily')
+    fetch(apiUrl('/api/digest/daily'))
       .then(r => r.json())
       .then(setDigest)
       .catch(() => {})

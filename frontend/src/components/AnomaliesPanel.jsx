@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react'
 import { DIMENSION_COLORS, DIMENSION_LABELS } from '../utils/colors.js'
+import { apiUrl } from '../utils/api.js'
 
 const PROXY_LABELS = {
   article_count:        'Volume articoli',
@@ -43,7 +44,7 @@ export default function AnomaliesPanel() {
   const [loading, setLoading]     = useState(true)
 
   useEffect(() => {
-    fetch('/api/score/anomalies')
+    fetch(apiUrl('/api/score/anomalies'))
       .then(r => r.json())
       .then(data => { setAnomalies(data); setLoading(false) })
       .catch(() => setLoading(false))

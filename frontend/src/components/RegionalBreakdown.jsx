@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MapPin } from 'lucide-react'
+import { apiUrl } from '../utils/api.js'
 
 const REGION_COLORS = {
   high:   'bg-red-500/20 border-red-500/40 text-red-400',
@@ -29,7 +30,7 @@ export default function RegionalBreakdown() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/map/regional')
+    fetch(apiUrl('/api/map/regional'))
       .then(r => r.json())
       .then(d => setData(d))
       .catch(() => setData(null))

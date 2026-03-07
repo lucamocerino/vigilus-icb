@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { apiUrl } from '../utils/api.js'
 
 const MAX_RETRIES = 3
 const RETRY_DELAY = 2000
@@ -25,7 +26,7 @@ export function useScore() {
   const load = useCallback(async () => {
     try {
       setError(null)
-      const data = await fetchWithRetry('/api/score/current')
+      const data = await fetchWithRetry(apiUrl('/api/score/current'))
       setScore(data)   // può essere null se 404
     } catch (err) {
       setError(err.message)
@@ -44,7 +45,7 @@ export function useScoreHistory(days = 30) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchWithRetry(`/api/score/history?days=${days}`)
+    fetchWithRetry(apiUrl(`/api/score/history?days=${days}`))
       .then(data => setHistory(data ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))

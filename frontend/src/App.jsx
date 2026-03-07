@@ -13,6 +13,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { useUrlState } from './hooks/useUrlState.js'
 import { createI18n } from './services/i18n.js'
 import { RefreshCw, AlertTriangle, Sun, Moon, Globe } from 'lucide-react'
+import { apiUrl } from './utils/api.js'
 
 // Lazy-loaded heavy components
 const RadarPlot = lazy(() => import('./components/RadarPlot.jsx'))
@@ -52,7 +53,7 @@ function NoDataBanner({ onTrigger }) {
   async function trigger() {
     setLoading(true)
     try {
-      await fetch('/api/score/trigger', { method: 'POST' })
+      await fetch(apiUrl('/api/score/trigger'), { method: 'POST' })
       // reload della pagina dopo 2s per permettere al backend di finire
       setTimeout(() => window.location.reload(), 2000)
     } catch {

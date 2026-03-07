@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { DIMENSION_COLORS, DIMENSION_LABELS } from '../utils/colors.js'
 import { formatDate } from '../utils/format.js'
+import { apiUrl } from '../utils/api.js'
 
 const DIMENSIONS = ['geopolitica', 'terrorismo', 'cyber', 'eversione', 'militare', 'sociale']
 
@@ -11,8 +12,8 @@ export default function EventFeed() {
 
   useEffect(() => {
     const url = filter
-      ? `/api/events/latest?dimension=${filter}&limit=20`
-      : '/api/events/latest?limit=20'
+      ? apiUrl(`/api/events/latest?dimension=${filter}&limit=20`)
+      : apiUrl('/api/events/latest?limit=20')
     fetch(url)
       .then(r => r.json())
       .then(setEvents)

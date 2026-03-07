@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { DIMENSION_COLORS } from '../utils/colors.js'
+import { apiUrl } from '../utils/api.js'
 
 const SOURCE_ICONS = {
   GDELT:  '◆',
@@ -14,7 +15,7 @@ export default function NewsTicker() {
 
   useEffect(() => {
     function load() {
-      fetch('/api/headlines')
+      fetch(apiUrl('/api/headlines'))
         .then(r => r.json())
         .then(data => { if (data?.length) setHeadlines(data) })
         .catch(() => {})

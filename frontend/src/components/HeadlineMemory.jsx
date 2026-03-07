@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, Database, Trash2, Brain } from 'lucide-react'
 import { searchMemory, storeHeadlines, getMemoryStats, clearMemory } from '../services/headlineMemory.js'
 import { DIMENSION_COLORS } from '../utils/colors.js'
+import { apiUrl } from '../utils/api.js'
 
 export default function HeadlineMemory() {
   const [query, setQuery] = useState('')
@@ -20,7 +21,7 @@ export default function HeadlineMemory() {
   async function ingestHeadlines() {
     setIngesting(true)
     try {
-      const resp = await fetch('/api/headlines')
+      const resp = await fetch(apiUrl('/api/headlines'))
       const headlines = await resp.json()
       if (headlines?.length) {
         await storeHeadlines(headlines)

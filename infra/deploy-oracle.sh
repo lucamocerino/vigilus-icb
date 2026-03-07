@@ -73,12 +73,25 @@ if [ ! -f .env ]; then
     echo ""
 fi
 
-# ── 6. Avvia con Docker Compose ──
-echo "[6/7] Avvio servizi..."
+# ── 6. Configura firewall OS ──
+echo "[6/8] Configurazione firewall..."
+if command -v iptables &> /dev/null; then
+    sudo iptables -I INPUT -p tcp --dport 80  -j ACCEPT 2>/dev/null || true
+    sudo iptables -I INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || true
+    sudo netfilter-persistent save 2>/dev/null || sudo iptables-save | sudo tee /etc/iptables/rules.v4 >/dev/null 2>&1 || true
+fi
+if command -v firewall-cmd &> /dev/null; then
+    sudo firewall-cmd --permanent --add-port=80/tcp  2>/dev/null || true
+    sudo firewall-cmd --permanent --add-port=443/tcp 2>/dev/null || true
+    sudo firewall-cmd --reload 2>/dev/null || true
+fi
+
+# ── 7. Avvia con Docker Compose ──
+echo "[7/8] Avvio servizi..."
 sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
-# ── 7. Applica migrazioni DB ──
-echo "[7/7] Migrazioni database..."
+# ── 8. Applica migrazioni DB ──
+echo "[8/8] Migrazioni database..."
 sleep 10  # Attendi che PostgreSQL sia pronto
 sudo docker compose exec -T backend alembic upgrade head 2>/dev/null || echo "Migrazioni: tabelle già aggiornate"
 

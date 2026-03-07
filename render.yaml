@@ -1,0 +1,56 @@
+# Render Blueprint — deploy automatico da GitHub
+# Backend su Render + DB su Supabase (free illimitato)
+# https://render.com/docs/blueprint-spec
+
+services:
+  # ── Backend API ──
+  - type: web
+    name: vigilus-api
+    runtime: python
+    region: frankfurt
+    plan: free
+    rootDir: backend
+    buildCommand: |
+      pip install . &&
+      python -m spacy download it_core_news_sm &&
+      python -c "import sentinella; print('Build OK')"
+    startCommand: uvicorn sentinella.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # Impostare manualmente con URL Supabase
+      - key: DEBUG
+        value: "false"
+      - key: API_KEY
+        generateValue: true
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "120"
+      - key: CORS_ORIGINS
+        sync: false  # Impostare con URL frontend Render
+      - key: SCHEDULER_ENABLED
+        value: "true"
+      - key: SCHEDULER_INTERVAL_MINUTES
+        value: "30"
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+
+  # ── Frontend (static site) ──
+  - type: web
+    name: vigilus-frontend
+    runtime: static
+    region: frankfurt
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # Impostare con URL backend Render (es. https://vigilus-api.onrender.com)
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

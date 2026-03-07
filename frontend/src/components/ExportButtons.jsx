@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Download } from 'lucide-react'
+import { apiUrl } from '../utils/api.js'
 
 export default function ExportButtons() {
   const [loadingCsv, setLoadingCsv] = useState(false)
@@ -8,7 +9,7 @@ export default function ExportButtons() {
   async function downloadCsv() {
     setLoadingCsv(true)
     try {
-      const resp = await fetch('/api/export/csv?days=30')
+      const resp = await fetch(apiUrl('/api/export/csv?days=30'))
       const blob = await resp.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -26,7 +27,7 @@ export default function ExportButtons() {
   async function downloadReport() {
     setLoadingPdf(true)
     try {
-      const resp = await fetch('/api/export/report')
+      const resp = await fetch(apiUrl('/api/export/report'))
       const data = await resp.json()
       if (data.error) {
         alert(data.error)

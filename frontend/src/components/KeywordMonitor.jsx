@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Bell, Plus, X, AlertTriangle } from 'lucide-react'
+import { apiUrl } from '../utils/api.js'
 
 export default function KeywordMonitor() {
   const [keywords, setKeywords] = useState(() => {
@@ -18,7 +19,7 @@ export default function KeywordMonitor() {
   // Fetch headlines e cerca match
   useEffect(() => {
     if (!keywords.length) return
-    fetch('/api/headlines')
+    fetch(apiUrl('/api/headlines'))
       .then(r => r.json())
       .then(data => {
         setHeadlines(data)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TrendingUp, AlertTriangle, Zap } from 'lucide-react'
 import { DIMENSION_COLORS } from '../utils/colors.js'
+import { apiUrl } from '../utils/api.js'
 
 const DIRECTION_STYLE = {
   spike:  { icon: '⚡', color: 'text-red-400',    bg: 'bg-red-500/10' },
@@ -14,7 +15,7 @@ export default function TrendingKeywords() {
 
   useEffect(() => {
     function load() {
-      fetch('/api/trending')
+      fetch(apiUrl('/api/trending'))
         .then(r => r.json())
         .then(d => setData(d))
         .catch(() => {})

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { DIMENSION_COLORS, DIMENSION_LABELS } from '../utils/colors.js'
 import { formatDate } from '../utils/format.js'
+import { apiUrl } from '../utils/api.js'
 
 export default function EventSearch() {
   const [query, setQuery] = useState('')
@@ -15,7 +16,7 @@ export default function EventSearch() {
     setLoading(true)
     setSearched(true)
     try {
-      const resp = await fetch(`/api/events/search?q=${encodeURIComponent(query)}&days=30&limit=30`)
+      const resp = await fetch(apiUrl(`/api/events/search?q=${encodeURIComponent(query)}&days=30&limit=30`))
       const data = await resp.json()
       setResults(data)
     } catch {

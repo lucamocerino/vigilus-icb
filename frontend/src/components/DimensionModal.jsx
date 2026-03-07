@@ -3,6 +3,7 @@ import { X, ExternalLink, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { DIMENSION_COLORS, DIMENSION_LABELS, getLevel } from '../utils/colors.js'
 import { formatDate, formatDateShort } from '../utils/format.js'
+import { apiUrl } from '../utils/api.js'
 
 const PROXY_LABELS = {
   article_count:        'Volume articoli',
@@ -38,8 +39,8 @@ export default function DimensionModal({ dimension, score, trend, rawValues, onC
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/events/latest?dimension=${dimension}&limit=5`).then(r => r.json()).catch(() => []),
-      fetch(`/api/dimension/${dimension}/history?days=30`).then(r => r.json()).catch(() => []),
+      fetch(apiUrl(`/api/events/latest?dimension=${dimension}&limit=5`)).then(r => r.json()).catch(() => []),
+      fetch(apiUrl(`/api/dimension/${dimension}/history?days=30`)).then(r => r.json()).catch(() => []),
     ]).then(([arts, hist]) => {
       setArticles(arts)
       setHistory(hist.map(h => ({ date: formatDateShort(h.timestamp), score: Math.round(h.score) })))
