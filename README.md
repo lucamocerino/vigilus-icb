@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <a href="https://vigilus-frontend.onrender.com"><img src="https://img.shields.io/badge/🔴_LIVE_DEMO-vigilus--frontend.onrender.com-indigo?style=for-the-badge" alt="Live Demo" /></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License" />
   <img src="https://img.shields.io/badge/Python-3.12-green.svg" alt="Python" />
   <img src="https://img.shields.io/badge/React-18-61DAFB.svg" alt="React" />
