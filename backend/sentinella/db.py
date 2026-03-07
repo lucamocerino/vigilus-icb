@@ -4,14 +4,21 @@ from sqlalchemy.orm import DeclarativeBase
 from sentinella.config import settings
 
 _is_sqlite = settings.database_url.startswith("sqlite")
+_is_pooler = "pooler.supabase" in settings.database_url
+
+_engine_kwargs = {}
+if not _is_sqlite:
+    _engine_kwargs["pool_pre_ping"] = True
+if _is_sqlite:
+    _engine_kwargs["connect_args"] = {"check_same_thread": False}
+# Supabase pooler (PgBouncer) requires statement_cache_size=0
+if _is_pooler:
+    _engine_kwargs["connect_args"] = {"statement_cache_size": 0, "prepared_statement_cache_size": 0}
 
 engine = create_async_engine(
     settings.database_url,
     echo=settings.debug,
-    # pool_pre_ping non supportato da SQLite
-    **({"pool_pre_ping": True} if not _is_sqlite else {}),
-    # SQLite richiede check_same_thread=False
-    **({"connect_args": {"check_same_thread": False}} if _is_sqlite else {}),
+    **_engine_kwargs,
 )
 
 AsyncSessionLocal = async_sessionmaker(
