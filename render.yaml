@@ -34,11 +34,10 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.0"
 
-  # ── Frontend (static site) ──
+  # ── Frontend (static site — no region for static) ──
   - type: web
     name: vigilus-frontend
     runtime: static
-    region: frankfurt
     plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
