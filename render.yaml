@@ -24,7 +24,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: API_KEY
-        generateValue: true
+        value: ""
       - key: RATE_LIMIT_PER_MINUTE
         value: "120"
       - key: CORS_ORIGINS
