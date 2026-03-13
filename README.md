@@ -41,12 +41,12 @@ Dashboard OSINT open source per il monitoraggio della sicurezza nazionale italia
 
 | Layer | Tecnologie |
 |---|---|
-| Backend | Python 3.12, FastAPI, SQLAlchemy 2.0, APScheduler, spaCy, Alembic |
+| Backend | Python 3.12, FastAPI, SQLAlchemy 2.0, APScheduler, spaCy, sentence-transformers, Alembic |
 | Frontend | React 18, Vite, Recharts, Leaflet, Tailwind CSS |
 | Database | SQLite (dev) / PostgreSQL 16 (prod via Supabase/Render) |
 | Infra | Render, Docker Compose, Caddy HTTPS, GitHub Actions CI/CD |
 | Sicurezza | API key auth, rate limiting, CORS, security headers, Sentry |
-| Intelligence | ML browser-side (threat + sentiment), Headline Memory RAG (IndexedDB) |
+| Intelligence | NLP classifier semantico (sentence-transformers), ML browser-side (threat + sentiment), Headline Memory RAG (IndexedDB) |
 | Monitoring | Prometheus `/metrics`, structured JSON logging |
 
 ### Funzionalità
@@ -54,7 +54,7 @@ Dashboard OSINT open source per il monitoraggio della sicurezza nazionale italia
 **Layout Bloomberg Terminal**
 - Mappa operativa a sinistra (60%) con 6 data layer toggle e resize drag handle
 - Pannelli intelligence a destra (40%) scrollabili
-- News ticker scrollante da 42+ feed RSS italiani
+- News ticker scrollante da 50+ feed RSS italiani
 - Score bar con indice composito + 6 dimensioni in tempo reale
 
 **Score & Dimensioni**
@@ -76,9 +76,10 @@ Dashboard OSINT open source per il monitoraggio della sicurezza nazionale italia
 - Keyword Monitor — alert personalizzabili con localStorage
 - Trending keywords — spike detection z-score (2h rolling vs 7gg baseline)
 
-**OSINT & Data — 8 Collector + 42 RSS**
+**OSINT & Data — 8 Collector + 50+ RSS**
 - ANSA, AGI, Adnkronos, Repubblica, Corriere, Sole24Ore, Difesa Online, Formiche, CSIRT, Red Hot Cyber, Reuters, BBC...
 - GDELT, CSIRT Italia, Google Trends, ACLED, OpenSky ADS-B, INGV
+- **Classificazione semantica NLP** — sentence-transformers (paraphrase-multilingual-MiniLM-L12-v2) con cosine similarity per dimensione, keyword fast-pass per terrorismo/cyber, filtro automatico notizie non pertinenti (gossip, sport, spettacolo), confidence score 0–1 per ogni articolo
 - Hotspot escalation con trend 48h
 - Cross-stream correlation (Pearson) + alert spike simultanei
 - Dossier regionale (14 regioni italiane)
@@ -128,7 +129,7 @@ python -m pytest tests/ -v --cov=sentinella
 
 | Fonte | Dati | Cache |
 |---|---|---|
-| **Mega RSS** (42+ feed) | Agenzie, quotidiani, difesa, cyber, geopolitica | 15min |
+| **Mega RSS** (50+ feed) | Agenzie, quotidiani, difesa, cyber, geopolitica — classificazione semantica NLP | 15min |
 | GDELT Project | Articoli internazionali, negatività | 1h |
 | CSIRT Italia | Bollettini cyber, CVE, infrastrutture | 30min |
 | Google Trends | Termini chiave italiani | 24h |
@@ -153,7 +154,7 @@ GET  /api/dimension/{name}           dettaglio dimensione
 GET  /api/dimension/{name}/history   storico dimensione
 GET  /api/events/latest              eventi classificati
 GET  /api/events/search              full-text search
-GET  /api/headlines                  titoli ticker (42+ fonti)
+GET  /api/headlines                  titoli ticker (50+ fonti)
 GET  /api/trending                   keywords spike detection
 GET  /api/hotspots                   escalation per dimensione
 GET  /api/predictions                prediction markets
@@ -204,7 +205,8 @@ Open source OSINT dashboard for monitoring Italy's national security. Bloomberg 
 
 - **Composite score 0–100** across 6 security dimensions with z-score normalization
 - **Operational map** with 6 toggleable data layers (NATO bases, infrastructure, earthquakes, flights, convergence)
-- **42+ Italian RSS feeds** with trending keyword spike detection
+- **50+ Italian RSS feeds** with NLP semantic classification and trending keyword spike detection
+- **Smart news classifier** — sentence-transformers with cosine similarity, automatic filtering of irrelevant content, confidence scores
 - **Browser-side ML** — threat classification + sentiment analysis in Web Worker
 - **Headline Memory RAG** — 5,000 headlines indexed in IndexedDB for semantic search
 - **Cross-stream correlation** — Pearson across dimensions, simultaneous spike alerts
@@ -215,7 +217,7 @@ Open source OSINT dashboard for monitoring Italy's national security. Bloomberg 
 
 ### Data Sources
 
-8 collectors + 42 RSS feeds: GDELT, CSIRT Italia, ACLED, Google Trends, OpenSky ADS-B, INGV earthquakes, ANSA, AGI, Adnkronos, Repubblica, Corriere, defense & cyber specialized feeds.
+8 collectors + 50+ RSS feeds: GDELT, CSIRT Italia, ACLED, Google Trends, OpenSky ADS-B, INGV earthquakes, ANSA, AGI, Adnkronos, Repubblica, Corriere, defense & cyber specialized feeds. News classified via NLP semantic embeddings with automatic irrelevant content filtering.
 
 ### Quick Start
 
@@ -229,7 +231,7 @@ cd frontend && npm install && npm run dev
 
 ### Stack
 
-FastAPI · React 18 · SQLAlchemy 2.0 · Leaflet · Tailwind CSS · PostgreSQL · Render · GitHub Actions
+FastAPI · React 18 · SQLAlchemy 2.0 · sentence-transformers · Leaflet · Tailwind CSS · PostgreSQL · Render · GitHub Actions
 
 ### License
 
