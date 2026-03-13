@@ -127,13 +127,13 @@ def get_classifier() -> SmartClassifier:
 
 
 class SmartClassifier:
-    """Classificatore semantico ONNX — nessuna dipendenza PyTorch a runtime."""
+    """Classificatore semantico ONNX — carica/scarica modello on-demand per risparmiare RAM."""
 
     def __init__(self) -> None:
         self._session = None
         self._tokenizer = None
         self._dim_embeddings: dict[str, np.ndarray] | None = None
-        self._ready = False
+        self._dim_embeddings_cached: dict[str, np.ndarray] | None = None
 
     # ── Model download + loading ────────────────────────────────────
 
@@ -158,10 +158,8 @@ class SmartClassifier:
             logger.warning("[classifier] Download modello fallito: %s", e)
             return False
 
-    def _ensure_loaded(self) -> bool:
-        """Carica il modello ONNX se non già fatto."""
-        if self._ready:
-            return True
+    def _load(self) -> bool:
+        """Carica modello ONNX in memoria."""
         try:
             if not self._download_model():
                 return False
@@ -169,7 +167,7 @@ class SmartClassifier:
             import onnxruntime as ort
             from tokenizers import Tokenizer
 
-            logger.info("[classifier] Caricamento modello ONNX quantizzato …")
+            logger.info("[classifier] Caricamento modello ONNX …")
             self._session = ort.InferenceSession(
                 str(MODEL_DIR / "model_quantized.onnx"),
                 providers=["CPUExecutionProvider"],
@@ -178,21 +176,33 @@ class SmartClassifier:
             self._tokenizer.enable_padding()
             self._tokenizer.enable_truncation(max_length=128)
 
-            # Pre-calcola embedding di riferimento per ogni dimensione
-            self._dim_embeddings = {}
-            for dim, descriptions in DIMENSION_DESCRIPTIONS.items():
-                embs = self._encode(descriptions)
-                self._dim_embeddings[dim] = np.mean(embs, axis=0)
-                norm = np.linalg.norm(self._dim_embeddings[dim])
-                if norm > 0:
-                    self._dim_embeddings[dim] /= norm
+            # Calcola embedding dimensioni (o usa cache)
+            if self._dim_embeddings_cached is None:
+                self._dim_embeddings = {}
+                for dim, descriptions in DIMENSION_DESCRIPTIONS.items():
+                    embs = self._encode(descriptions)
+                    self._dim_embeddings[dim] = np.mean(embs, axis=0)
+                    norm = np.linalg.norm(self._dim_embeddings[dim])
+                    if norm > 0:
+                        self._dim_embeddings[dim] /= norm
+                # Cache: sono solo 7 x 384 floats = ~10KB
+                self._dim_embeddings_cached = dict(self._dim_embeddings)
+            else:
+                self._dim_embeddings = self._dim_embeddings_cached
 
-            self._ready = True
-            logger.info("[classifier] Modello ONNX pronto — %d dimensioni", len(DIMENSION_DESCRIPTIONS))
+            logger.info("[classifier] Modello ONNX pronto")
             return True
         except Exception as e:
             logger.warning("[classifier] Impossibile caricare il modello: %s", e)
             return False
+
+    def _unload(self) -> None:
+        """Rilascia modello ONNX dalla memoria."""
+        self._session = None
+        self._tokenizer = None
+        import gc
+        gc.collect()
+        logger.info("[classifier] Modello ONNX rilasciato dalla memoria")
 
     def _encode(self, texts: list[str]) -> np.ndarray:
         """Encode testi con ONNX Runtime (mean pooling + normalize)."""
@@ -229,8 +239,10 @@ class SmartClassifier:
                         dimension=dim, confidence=0.95, method="keyword"
                     )
 
-        if self._ensure_loaded():
-            return self._classify_semantic(text)
+        if self._load():
+            result = self._classify_semantic(text)
+            self._unload()
+            return result
 
         return self._classify_fallback(text_lower, feed_category)
 
@@ -261,8 +273,9 @@ class SmartClassifier:
                 semantic_indices.append(i)
                 semantic_texts.append(text)
 
-        if semantic_texts and self._ensure_loaded():
+        if semantic_texts and self._load():
             semantic_results = self._classify_semantic_batch(semantic_texts)
+            self._unload()
             for idx, result in zip(semantic_indices, semantic_results):
                 results[idx] = result
         else:
