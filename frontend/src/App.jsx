@@ -28,12 +28,8 @@ const ExportButtons = lazy(() => import('./components/ExportButtons.jsx'))
 const ComparisonView = lazy(() => import('./components/ComparisonView.jsx'))
 const RegionalBreakdown = lazy(() => import('./components/RegionalBreakdown.jsx'))
 const TrendingKeywords = lazy(() => import('./components/TrendingKeywords.jsx'))
-const KeywordMonitor = lazy(() => import('./components/KeywordMonitor.jsx'))
-const HeadlineMemory = lazy(() => import('./components/HeadlineMemory.jsx'))
-const MLClassifier = lazy(() => import('./components/MLClassifier.jsx'))
 const EventSearch = lazy(() => import('./components/EventSearch.jsx'))
 const DailyDigest = lazy(() => import('./components/DailyDigest.jsx'))
-const LiveStreams = lazy(() => import('./components/LiveStreams.jsx'))
 const HotspotPanel = lazy(() => import('./components/HotspotPanel.jsx'))
 const PredictionMarkets = lazy(() => import('./components/PredictionMarkets.jsx'))
 const OutageMonitor = lazy(() => import('./components/OutageMonitor.jsx'))
@@ -309,6 +305,23 @@ export default function App() {
                 })}
               </div>
 
+              {/* Timeline storico */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <ErrorBoundary label="Export"><ExportButtons /></ErrorBoundary>
+                  <div className="flex gap-1 text-xs">
+                    {[7, 30, 90].map(d => (
+                      <button key={d} onClick={() => setHistoryDays(d)}
+                        className={`px-2 py-0.5 rounded transition-colors ${
+                          historyDays === d ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300'
+                        }`}
+                      >{d}g</button>
+                    ))}
+                  </div>
+                </div>
+                <ErrorBoundary label="Timeline"><Timeline days={historyDays} /></ErrorBoundary>
+              </div>
+
               {/* Trending */}
               <ErrorBoundary label="Trending"><TrendingKeywords /></ErrorBoundary>
 
@@ -324,14 +337,6 @@ export default function App() {
               {/* Intelligence */}
               <div className="grid grid-cols-1 gap-2">
                 <ErrorBoundary label="Daily Digest"><DailyDigest /></ErrorBoundary>
-                <ErrorBoundary label="Event Search"><EventSearch /></ErrorBoundary>
-                <ErrorBoundary label="Keyword Monitor"><KeywordMonitor /></ErrorBoundary>
-              </div>
-
-              {/* Headline Memory + ML */}
-              <div className="grid grid-cols-2 gap-2">
-                <ErrorBoundary label="Headline Memory"><HeadlineMemory /></ErrorBoundary>
-                <ErrorBoundary label="ML Classifier"><MLClassifier /></ErrorBoundary>
               </div>
 
               {/* Region Brief */}
@@ -344,26 +349,6 @@ export default function App() {
               <div className="grid grid-cols-2 gap-2">
                 <ErrorBoundary label="Anomalie"><AnomaliesPanel /></ErrorBoundary>
                 <ErrorBoundary label="Heatmap"><HeatmapChart /></ErrorBoundary>
-              </div>
-
-              {/* Live streams */}
-              <ErrorBoundary label="Live Streams"><LiveStreams /></ErrorBoundary>
-
-              {/* Timeline */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <ErrorBoundary label="Export"><ExportButtons /></ErrorBoundary>
-                  <div className="flex gap-1 text-xs">
-                    {[7, 30, 90].map(d => (
-                      <button key={d} onClick={() => setHistoryDays(d)}
-                        className={`px-2 py-0.5 rounded transition-colors ${
-                          historyDays === d ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300'
-                        }`}
-                      >{d}g</button>
-                    ))}
-                  </div>
-                </div>
-                <ErrorBoundary label="Timeline"><Timeline days={historyDays} /></ErrorBoundary>
               </div>
 
               {/* Sources */}
