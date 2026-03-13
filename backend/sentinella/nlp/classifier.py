@@ -1,14 +1,18 @@
 """Classificatore semantico per notizie italiane.
 
-Usa sentence-transformers con modello multilingue per classificare
+Usa ONNX Runtime con modello quantizzato int8 per classificare
 articoli nelle dimensioni di sicurezza tramite cosine similarity.
+Nessuna dipendenza da PyTorch a runtime.
 """
 
 from __future__ import annotations
 
 import logging
+import os
 import re
+import tarfile
 import threading
+from pathlib import Path
 from typing import TypedDict
 
 import numpy as np
@@ -79,10 +83,8 @@ DIMENSION_DESCRIPTIONS: dict[str, list[str]] = {
     ],
 }
 
-# Soglia minima di similarità: sotto questa → non_pertinente
 RELEVANCE_THRESHOLD = 0.25
 
-# Keyword override per casi ovvi (velocizza e risparmia risorse)
 KEYWORD_OVERRIDES: dict[str, list[str]] = {
     "terrorismo": [
         "terrorismo", "terrorista", "attentato", "isis", "jihad",
@@ -93,6 +95,13 @@ KEYWORD_OVERRIDES: dict[str, list[str]] = {
         "data breach", "csirt", "vulnerabilità", "cve-",
     ],
 }
+
+# URL del modello ONNX quantizzato su GitHub Releases
+MODEL_RELEASE_URL = (
+    "https://github.com/lucamocerino/vigilus-icb/releases/download/"
+    "v1.1.0-model/classifier-onnx-v1.tar.gz"
+)
+MODEL_DIR = Path(__file__).parent / "model"
 
 
 class ClassificationResult(TypedDict):
@@ -118,57 +127,100 @@ def get_classifier() -> SmartClassifier:
 
 
 class SmartClassifier:
-    """Classificatore semantico basato su sentence-transformers."""
-
-    MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
+    """Classificatore semantico ONNX — nessuna dipendenza PyTorch a runtime."""
 
     def __init__(self) -> None:
-        self._model = None
+        self._session = None
+        self._tokenizer = None
         self._dim_embeddings: dict[str, np.ndarray] | None = None
         self._ready = False
 
-    # ── Lazy loading ────────────────────────────────────────────────
+    # ── Model download + loading ────────────────────────────────────
+
+    def _download_model(self) -> bool:
+        """Scarica il modello ONNX da GitHub Releases se non presente."""
+        model_path = MODEL_DIR / "model_quantized.onnx"
+        if model_path.exists():
+            return True
+        try:
+            import urllib.request
+
+            MODEL_DIR.mkdir(parents=True, exist_ok=True)
+            tarball = MODEL_DIR / "model.tar.gz"
+            logger.info("[classifier] Download modello ONNX da GitHub Releases …")
+            urllib.request.urlretrieve(MODEL_RELEASE_URL, tarball)
+            with tarfile.open(tarball, "r:gz") as tar:
+                tar.extractall(MODEL_DIR)
+            tarball.unlink()
+            logger.info("[classifier] Modello scaricato in %s", MODEL_DIR)
+            return True
+        except Exception as e:
+            logger.warning("[classifier] Download modello fallito: %s", e)
+            return False
 
     def _ensure_loaded(self) -> bool:
-        """Carica il modello se non già fatto. Restituisce True se pronto."""
+        """Carica il modello ONNX se non già fatto."""
         if self._ready:
             return True
         try:
-            from sentence_transformers import SentenceTransformer
+            if not self._download_model():
+                return False
 
-            logger.info("[classifier] Caricamento modello %s …", self.MODEL_NAME)
-            self._model = SentenceTransformer(self.MODEL_NAME)
+            import onnxruntime as ort
+            from tokenizers import Tokenizer
+
+            logger.info("[classifier] Caricamento modello ONNX quantizzato …")
+            self._session = ort.InferenceSession(
+                str(MODEL_DIR / "model_quantized.onnx"),
+                providers=["CPUExecutionProvider"],
+            )
+            self._tokenizer = Tokenizer.from_file(str(MODEL_DIR / "tokenizer.json"))
+            self._tokenizer.enable_padding()
+            self._tokenizer.enable_truncation(max_length=128)
 
             # Pre-calcola embedding di riferimento per ogni dimensione
             self._dim_embeddings = {}
             for dim, descriptions in DIMENSION_DESCRIPTIONS.items():
-                embs = self._model.encode(descriptions, normalize_embeddings=True)
-                # Media degli embedding come rappresentazione della dimensione
+                embs = self._encode(descriptions)
                 self._dim_embeddings[dim] = np.mean(embs, axis=0)
-                # Normalizza il vettore medio
                 norm = np.linalg.norm(self._dim_embeddings[dim])
                 if norm > 0:
                     self._dim_embeddings[dim] /= norm
 
             self._ready = True
-            logger.info("[classifier] Modello pronto — %d dimensioni caricate", len(DIMENSION_DESCRIPTIONS))
+            logger.info("[classifier] Modello ONNX pronto — %d dimensioni", len(DIMENSION_DESCRIPTIONS))
             return True
         except Exception as e:
             logger.warning("[classifier] Impossibile caricare il modello: %s", e)
             return False
 
+    def _encode(self, texts: list[str]) -> np.ndarray:
+        """Encode testi con ONNX Runtime (mean pooling + normalize)."""
+        assert self._session is not None and self._tokenizer is not None
+
+        encoded = self._tokenizer.encode_batch(texts)
+        input_ids = np.array([e.ids for e in encoded], dtype=np.int64)
+        attention_mask = np.array([e.attention_mask for e in encoded], dtype=np.int64)
+        token_type_ids = np.array([e.type_ids for e in encoded], dtype=np.int64)
+
+        outputs = self._session.run(None, {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "token_type_ids": token_type_ids,
+        })
+
+        hidden = outputs[0]  # (batch, seq, hidden_dim)
+        mask_exp = attention_mask[:, :, np.newaxis].astype(np.float32)
+        pooled = (hidden * mask_exp).sum(axis=1) / mask_exp.sum(axis=1)
+        norms = np.linalg.norm(pooled, axis=1, keepdims=True)
+        return pooled / norms
+
     # ── Classificazione ─────────────────────────────────────────────
 
     def classify(self, text: str, feed_category: str = "") -> ClassificationResult:
-        """Classifica un singolo articolo.
-
-        1. Prova keyword override (veloce, alta precisione)
-        2. Prova classificazione semantica
-        3. Fallback su categoria feed
-        """
+        """Classifica un singolo articolo."""
         text_lower = text.lower()
 
-        # Keyword override per casi ovvi
         for dim, keywords in KEYWORD_OVERRIDES.items():
             for kw in keywords:
                 pattern = r'(?<![a-zA-Zà-ú])' + re.escape(kw) + r'(?![a-zA-Zà-ú])'
@@ -177,15 +229,13 @@ class SmartClassifier:
                         dimension=dim, confidence=0.95, method="keyword"
                     )
 
-        # Classificazione semantica
         if self._ensure_loaded():
             return self._classify_semantic(text)
 
-        # Fallback keyword legacy
         return self._classify_fallback(text_lower, feed_category)
 
     def classify_batch(self, texts: list[str], feed_categories: list[str] | None = None) -> list[ClassificationResult]:
-        """Classifica un batch di articoli (più efficiente per molti articoli)."""
+        """Classifica un batch di articoli."""
         if feed_categories is None:
             feed_categories = [""] * len(texts)
 
@@ -193,7 +243,6 @@ class SmartClassifier:
         semantic_indices: list[int] = []
         semantic_texts: list[str] = []
 
-        # Prima passa: keyword override
         for i, text in enumerate(texts):
             text_lower = text.lower()
             matched = False
@@ -212,13 +261,11 @@ class SmartClassifier:
                 semantic_indices.append(i)
                 semantic_texts.append(text)
 
-        # Seconda passa: semantica batch
         if semantic_texts and self._ensure_loaded():
             semantic_results = self._classify_semantic_batch(semantic_texts)
             for idx, result in zip(semantic_indices, semantic_results):
                 results[idx] = result
         else:
-            # Fallback per quelli non classificati
             for idx in semantic_indices:
                 if results[idx] is None:
                     results[idx] = self._classify_fallback(
@@ -228,10 +275,8 @@ class SmartClassifier:
         return results
 
     def _classify_semantic(self, text: str) -> ClassificationResult:
-        """Classificazione semantica di un singolo testo."""
-        assert self._model is not None and self._dim_embeddings is not None
-
-        text_emb = self._model.encode([text], normalize_embeddings=True)[0]
+        assert self._dim_embeddings is not None
+        text_emb = self._encode([text])[0]
 
         best_dim = "non_pertinente"
         best_score = -1.0
@@ -244,7 +289,6 @@ class SmartClassifier:
                 best_score = score
                 best_dim = dim
 
-        # Se il non_pertinente ha score più alto, o il best è sotto soglia
         non_pert_score = scores.get("non_pertinente", 0.0)
         if best_score < RELEVANCE_THRESHOLD or non_pert_score > best_score:
             return ClassificationResult(
@@ -260,16 +304,11 @@ class SmartClassifier:
         )
 
     def _classify_semantic_batch(self, texts: list[str]) -> list[ClassificationResult]:
-        """Classificazione semantica batch (un solo encode per tutti i testi)."""
-        assert self._model is not None and self._dim_embeddings is not None
+        assert self._dim_embeddings is not None
 
-        text_embs = self._model.encode(texts, normalize_embeddings=True, batch_size=64)
-
-        # Matrice dimensioni: (n_dims, emb_size)
+        text_embs = self._encode(texts)
         dim_names = list(self._dim_embeddings.keys())
         dim_matrix = np.array([self._dim_embeddings[d] for d in dim_names])
-
-        # Cosine similarity: (n_texts, n_dims)
         sim_matrix = text_embs @ dim_matrix.T
 
         results: list[ClassificationResult] = []
@@ -277,8 +316,6 @@ class SmartClassifier:
 
         for i in range(len(texts)):
             scores = sim_matrix[i]
-
-            # Trova best dimensione (escluso non_pertinente)
             best_score = -1.0
             best_dim = "non_pertinente"
             for j, dim in enumerate(dim_names):

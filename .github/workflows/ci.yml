@@ -23,10 +23,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install ".[dev]"
           python -m spacy download it_core_news_sm
-          python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')"
+          python -c "from sentinella.nlp.classifier import get_classifier; get_classifier()._download_model()"
 
       - name: Lint
         run: python -m ruff check sentinella/
