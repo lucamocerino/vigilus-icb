@@ -271,8 +271,14 @@ class TestMegaRssCollectHttp:
         result = await c._fetch_feed(mock_client, {"name": "Test", "url": "http://feed", "category": "top"})
         assert len(result) == 2
         assert result[0]["source"] == "Test"
-        # Second article should be classified as cyber
-        assert result[1]["dimension"] == "cyber"
+        # Classification now happens in batch via _classify_batch, not in _fetch_feed
+        assert "title" in result[1]
+        assert result[1]["category"] == "top"
+
+        # Verify batch classification works
+        classified = c._classify_batch(result)
+        assert classified[1]["dimension"] == "cyber"
+        assert "confidence" in classified[1]
 
     @pytest.mark.asyncio
     async def test_fetch_feed_failure(self):

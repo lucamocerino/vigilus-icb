@@ -189,13 +189,22 @@ class NewsRssCollector(BaseCollector):
         ]
 
     def _classify_articles(self, articles: list[dict]) -> dict[str, list[dict]]:
-        classified: dict[str, list[dict]] = {dim: [] for dim in DIMENSION_KEYWORDS}
-        for article in articles:
-            text = (article.get("title", "") + " " + article.get("summary", "")).lower()
-            for dim, keywords in DIMENSION_KEYWORDS.items():
-                if any(kw in text for kw in keywords):
-                    classified[dim].append(article)
-                    break
+        from sentinella.nlp.classifier import get_classifier, DIMENSIONS
+
+        classified: dict[str, list[dict]] = {dim: [] for dim in DIMENSIONS}
+        classifier = get_classifier()
+        texts = [
+            (a.get("title", "") + " " + a.get("summary", ""))
+            for a in articles
+        ]
+        results = classifier.classify_batch(texts)
+
+        for article, result in zip(articles, results):
+            dim = result["dimension"]
+            article["confidence"] = result["confidence"]
+            article["classification_method"] = result["method"]
+            classified[dim].append(article)
+
         return classified
 
     def _extract_geo_events(

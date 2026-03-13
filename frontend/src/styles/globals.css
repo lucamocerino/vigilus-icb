@@ -163,12 +163,15 @@ nav button[class*="border-indigo"] {
   100% { transform: scale(1); opacity: 0.8; }
 }
 .leaflet-marker-icon {
-  transition: transform 0.3s ease, filter 0.3s ease;
+  transition: filter 0.3s ease;
 }
 .leaflet-marker-icon:hover {
-  transform: scale(1.4) !important;
   z-index: 1000 !important;
   filter: brightness(1.5) drop-shadow(0 0 8px currentColor);
+}
+.leaflet-marker-icon:hover > div {
+  transform: scale(1.4);
+  transition: transform 0.3s ease;
 }
 
 /* Leaflet popup dark */

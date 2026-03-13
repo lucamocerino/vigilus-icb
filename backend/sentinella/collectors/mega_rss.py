@@ -156,6 +156,9 @@ class MegaRssCollector(BaseCollector):
                     seen_titles.add(title_key)
                     all_articles.append(article)
 
+        # Classificazione batch con SmartClassifier
+        all_articles = self._classify_batch(all_articles)
+
         logger.info(f"[mega_rss] Raccolti {len(all_articles)} articoli unici da {len(FEEDS)} feed")
         return all_articles
 
@@ -177,8 +180,6 @@ class MegaRssCollector(BaseCollector):
                     continue
 
                 summary = entry.get("summary", "")[:300]
-                text = (title + " " + summary).lower()
-                dimension = self._classify(text, feed.get("category", "top"))
 
                 articles.append({
                     "title": title,
@@ -187,7 +188,6 @@ class MegaRssCollector(BaseCollector):
                     "published": entry.get("published", ""),
                     "source": feed["name"],
                     "category": feed.get("category", "top"),
-                    "dimension": dimension,
                     "collected_at": datetime.now(timezone.utc).isoformat(),
                 })
 
@@ -195,12 +195,24 @@ class MegaRssCollector(BaseCollector):
         except Exception:
             return []
 
-    def _classify(self, text: str, category: str) -> str:
-        """Classifica un articolo per dimensione con keyword override."""
-        for dim, keywords in DIMENSION_KEYWORDS.items():
-            if any(kw in text for kw in keywords):
-                return dim
-        return CATEGORY_DIMENSION.get(category, "geopolitica")
+    def _classify_batch(self, articles: list[dict]) -> list[dict]:
+        """Classifica tutti gli articoli con SmartClassifier (batch)."""
+        from sentinella.nlp.classifier import get_classifier
+
+        classifier = get_classifier()
+        texts = [
+            (a.get("title", "") + " " + a.get("summary", ""))
+            for a in articles
+        ]
+        categories = [a.get("category", "top") for a in articles]
+        results = classifier.classify_batch(texts, categories)
+
+        for article, result in zip(articles, results):
+            article["dimension"] = result["dimension"]
+            article["confidence"] = result["confidence"]
+            article["classification_method"] = result["method"]
+
+        return articles
 
     def _group_by(self, articles: list[dict], key: str) -> dict[str, int]:
         counts: dict[str, int] = {}

@@ -154,11 +154,21 @@ class TestMegaRssCollector:
         assert result["cyber"] == 1
 
     def test_classify_keyword_override(self):
-        c = MegaRssCollector()
-        assert c._classify("attentato terrorismo isis", "top") == "terrorismo"
-        assert c._classify("ransomware hacker attacco", "top") == "cyber"
-        assert c._classify("esercito nato aviano", "top") == "militare"
-        assert c._classify("notizia generica", "cronaca") == "sociale"  # fallback to category
+        """Verifica che SmartClassifier gestisca correttamente i casi critici."""
+        from sentinella.nlp.classifier import get_classifier
+
+        classifier = get_classifier()
+        # Keyword override (alta confidenza)
+        r = classifier.classify("attentato terrorismo isis", "top")
+        assert r["dimension"] == "terrorismo"
+        r = classifier.classify("ransomware hacker attacco", "top")
+        assert r["dimension"] == "cyber"
+        # Semantico o keyword — deve essere militare
+        r = classifier.classify("esercitazione militare NATO nel Mediterraneo", "top")
+        assert r["dimension"] == "militare"
+        # Gossip/spettacolo deve essere non_pertinente
+        r = classifier.classify("Mara Venier e Renato Zero al festival di Sanremo", "top")
+        assert r["dimension"] == "non_pertinente"
 
     @pytest.mark.asyncio
     async def test_collect_uses_cache(self):
