@@ -28,7 +28,7 @@ services:
       - key: RATE_LIMIT_PER_MINUTE
         value: "120"
       - key: CORS_ORIGINS
-        sync: false  # Impostare con URL frontend Render
+        value: "https://vigilus-frontend.onrender.com"
       - key: SCHEDULER_ENABLED
         value: "true"
       - key: SCHEDULER_INTERVAL_MINUTES
@@ -45,7 +45,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        sync: false  # Impostare con URL backend Render (es. https://vigilus-api.onrender.com)
+        value: "https://vigilus-api.onrender.com"
     headers:
       - path: /*
         name: X-Content-Type-Options
