@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sentinella-v1'
+const CACHE_NAME = 'sentinella-v2'
 const TILE_CACHE = 'sentinella-tiles-v1'
 const MAX_TILES = 500
 
@@ -23,31 +23,40 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
 
-  // Cache-first for map tiles
-  if (url.hostname.includes('basemaps.cartocdn.com')) {
-    event.respondWith(
-      caches.open(TILE_CACHE).then(async cache => {
-        const cached = await cache.match(event.request)
-        if (cached) return cached
-        const response = await fetch(event.request)
-        if (response.ok) {
-          cache.put(event.request, response.clone())
-          // Evict oldest if over limit
-          const keys = await cache.keys()
-          if (keys.length > MAX_TILES) {
-            await cache.delete(keys[0])
+  // Don't intercept cross-origin API requests
+  if (url.origin !== self.location.origin) {
+    if (url.hostname.includes('basemaps.cartocdn.com')) {
+      // Cache-first for map tiles
+      event.respondWith(
+        caches.open(TILE_CACHE).then(async cache => {
+          const cached = await cache.match(event.request)
+          if (cached) return cached
+          const response = await fetch(event.request)
+          if (response.ok) {
+            cache.put(event.request, response.clone())
+            const keys = await cache.keys()
+            if (keys.length > MAX_TILES) {
+              await cache.delete(keys[0])
+            }
           }
-        }
-        return response
-      }).catch(() => caches.match(event.request))
-    )
+          return response
+        }).catch(() => caches.match(event.request).then(r => r || Response.error()))
+      )
+    }
     return
   }
 
-  // Network-first for API
-  if (url.pathname.startsWith('/api/')) {
+  // Network-first for API — always return a valid Response
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/ws/')) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(event.request).catch(() =>
+        caches.match(event.request).then(cached =>
+          cached || new Response(JSON.stringify({ error: 'offline' }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      )
     )
     return
   }
