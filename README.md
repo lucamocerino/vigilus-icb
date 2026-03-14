@@ -106,7 +106,6 @@ Dashboard OSINT open source per il monitoraggio della sicurezza nazionale italia
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install ".[dev]"
-python -m spacy download it_core_news_sm
 uvicorn sentinella.main:app --reload    # http://localhost:8000
 
 # Frontend
@@ -223,7 +222,7 @@ Open source OSINT dashboard for monitoring Italy's national security. Bloomberg 
 
 ```bash
 cd backend && python -m venv .venv && source .venv/bin/activate
-pip install ".[dev]" && python -m spacy download it_core_news_sm
+pip install ".[dev]"
 uvicorn sentinella.main:app --reload
 
 cd frontend && npm install && npm run dev
