@@ -2,14 +2,19 @@
 
 Usa ONNX Runtime con modello quantizzato int8 per classificare
 articoli nelle dimensioni di sicurezza tramite cosine similarity.
-Nessuna dipendenza da PyTorch a runtime.
+
+L'inferenza ONNX gira in un subprocess separato così la memoria
+viene rilasciata completamente dal SO al termine.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
+import subprocess
+import sys
 import tarfile
 import threading
 from pathlib import Path
@@ -29,8 +34,7 @@ DIMENSIONS = [
     "non_pertinente",
 ]
 
-# Descrizioni ricche per ogni dimensione — il modello confronta
-# l'embedding dell'articolo con queste descrizioni di riferimento.
+# Descrizioni ricche per ogni dimensione
 DIMENSION_DESCRIPTIONS: dict[str, list[str]] = {
     "geopolitica": [
         "relazioni internazionali diplomazia trattati sanzioni politica estera",
@@ -96,7 +100,6 @@ KEYWORD_OVERRIDES: dict[str, list[str]] = {
     ],
 }
 
-# URL del modello ONNX quantizzato su GitHub Releases
 MODEL_RELEASE_URL = (
     "https://github.com/lucamocerino/vigilus-icb/releases/download/"
     "v1.1.0-model/classifier-onnx-v1.tar.gz"
@@ -109,8 +112,6 @@ class ClassificationResult(TypedDict):
     confidence: float
     method: str  # "semantic" | "keyword" | "fallback"
 
-
-# ── Singleton classifier ──────────────────────────────────────────────
 
 _lock = threading.Lock()
 _instance: SmartClassifier | None = None
@@ -126,16 +127,88 @@ def get_classifier() -> SmartClassifier:
     return _instance
 
 
+# ── Script eseguito nel subprocess per l'inferenza ONNX ──────────────
+
+_SUBPROCESS_SCRIPT = r'''
+import json, sys, numpy as np
+
+def main():
+    input_data = json.loads(sys.stdin.read())
+    texts = input_data["texts"]
+    dim_descs = input_data["dim_descs"]
+    threshold = input_data["threshold"]
+    model_dir = input_data["model_dir"]
+
+    import onnxruntime as ort
+    from tokenizers import Tokenizer
+
+    session = ort.InferenceSession(
+        f"{model_dir}/model_quantized.onnx",
+        providers=["CPUExecutionProvider"],
+    )
+    tokenizer = Tokenizer.from_file(f"{model_dir}/tokenizer.json")
+    tokenizer.enable_padding()
+    tokenizer.enable_truncation(max_length=128)
+
+    def encode(txts):
+        encoded = tokenizer.encode_batch(txts)
+        ids = np.array([e.ids for e in encoded], dtype=np.int64)
+        mask = np.array([e.attention_mask for e in encoded], dtype=np.int64)
+        tids = np.array([e.type_ids for e in encoded], dtype=np.int64)
+        out = session.run(None, {"input_ids": ids, "attention_mask": mask, "token_type_ids": tids})
+        hidden = out[0]
+        mask_exp = mask[:, :, np.newaxis].astype(np.float32)
+        pooled = (hidden * mask_exp).sum(axis=1) / mask_exp.sum(axis=1)
+        norms = np.linalg.norm(pooled, axis=1, keepdims=True)
+        return pooled / norms
+
+    # Compute dimension embeddings
+    dim_names = list(dim_descs.keys())
+    dim_embs = {}
+    for dim, descs in dim_descs.items():
+        embs = encode(descs)
+        mean_emb = np.mean(embs, axis=0)
+        norm = np.linalg.norm(mean_emb)
+        if norm > 0:
+            mean_emb /= norm
+        dim_embs[dim] = mean_emb
+
+    dim_matrix = np.array([dim_embs[d] for d in dim_names])
+
+    # Classify texts
+    text_embs = encode(texts)
+    sim_matrix = text_embs @ dim_matrix.T
+
+    non_pert_idx = dim_names.index("non_pertinente") if "non_pertinente" in dim_names else -1
+    results = []
+    for i in range(len(texts)):
+        scores = sim_matrix[i]
+        best_score, best_dim = -1.0, "non_pertinente"
+        for j, dim in enumerate(dim_names):
+            if dim != "non_pertinente" and scores[j] > best_score:
+                best_score = float(scores[j])
+                best_dim = dim
+        non_pert_score = float(scores[non_pert_idx]) if non_pert_idx >= 0 else 0.0
+        if best_score < threshold or non_pert_score > best_score:
+            results.append({"dimension": "non_pertinente",
+                            "confidence": round(max(non_pert_score, 1.0 - best_score), 3),
+                            "method": "semantic"})
+        else:
+            results.append({"dimension": best_dim,
+                            "confidence": round(best_score, 3),
+                            "method": "semantic"})
+
+    json.dump(results, sys.stdout)
+
+main()
+'''
+
+
 class SmartClassifier:
-    """Classificatore semantico ONNX — carica/scarica modello on-demand per risparmiare RAM."""
+    """Classificatore semantico — inferenza ONNX in subprocess per zero memory leak."""
 
     def __init__(self) -> None:
-        self._session = None
-        self._tokenizer = None
-        self._dim_embeddings: dict[str, np.ndarray] | None = None
-        self._dim_embeddings_cached: dict[str, np.ndarray] | None = None
-
-    # ── Model download + loading ────────────────────────────────────
+        pass
 
     def _download_model(self) -> bool:
         """Scarica il modello ONNX da GitHub Releases se non presente."""
@@ -144,7 +217,6 @@ class SmartClassifier:
             return True
         try:
             import urllib.request
-
             MODEL_DIR.mkdir(parents=True, exist_ok=True)
             tarball = MODEL_DIR / "model.tar.gz"
             logger.info("[classifier] Download modello ONNX da GitHub Releases …")
@@ -158,91 +230,43 @@ class SmartClassifier:
             logger.warning("[classifier] Download modello fallito: %s", e)
             return False
 
-    def _load(self) -> bool:
-        """Carica modello ONNX in memoria."""
+    def _run_onnx_subprocess(self, texts: list[str]) -> list[ClassificationResult] | None:
+        """Esegue classificazione ONNX in un subprocess separato."""
         try:
-            if not self._download_model():
-                return False
-
-            import onnxruntime as ort
-            from tokenizers import Tokenizer
-
-            logger.info("[classifier] Caricamento modello ONNX …")
-            self._session = ort.InferenceSession(
-                str(MODEL_DIR / "model_quantized.onnx"),
-                providers=["CPUExecutionProvider"],
+            input_data = json.dumps({
+                "texts": texts,
+                "dim_descs": DIMENSION_DESCRIPTIONS,
+                "threshold": RELEVANCE_THRESHOLD,
+                "model_dir": str(MODEL_DIR),
+            })
+            result = subprocess.run(
+                [sys.executable, "-c", _SUBPROCESS_SCRIPT],
+                input=input_data,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
-            self._tokenizer = Tokenizer.from_file(str(MODEL_DIR / "tokenizer.json"))
-            self._tokenizer.enable_padding()
-            self._tokenizer.enable_truncation(max_length=128)
-
-            # Calcola embedding dimensioni (o usa cache)
-            if self._dim_embeddings_cached is None:
-                self._dim_embeddings = {}
-                for dim, descriptions in DIMENSION_DESCRIPTIONS.items():
-                    embs = self._encode(descriptions)
-                    self._dim_embeddings[dim] = np.mean(embs, axis=0)
-                    norm = np.linalg.norm(self._dim_embeddings[dim])
-                    if norm > 0:
-                        self._dim_embeddings[dim] /= norm
-                # Cache: sono solo 7 x 384 floats = ~10KB
-                self._dim_embeddings_cached = dict(self._dim_embeddings)
-            else:
-                self._dim_embeddings = self._dim_embeddings_cached
-
-            logger.info("[classifier] Modello ONNX pronto")
-            return True
+            if result.returncode != 0:
+                logger.warning("[classifier] Subprocess fallito: %s", result.stderr[:500])
+                return None
+            return json.loads(result.stdout)
         except Exception as e:
-            logger.warning("[classifier] Impossibile caricare il modello: %s", e)
-            return False
-
-    def _unload(self) -> None:
-        """Rilascia modello ONNX dalla memoria."""
-        self._session = None
-        self._tokenizer = None
-        import gc
-        gc.collect()
-        logger.info("[classifier] Modello ONNX rilasciato dalla memoria")
-
-    def _encode(self, texts: list[str]) -> np.ndarray:
-        """Encode testi con ONNX Runtime (mean pooling + normalize)."""
-        assert self._session is not None and self._tokenizer is not None
-
-        encoded = self._tokenizer.encode_batch(texts)
-        input_ids = np.array([e.ids for e in encoded], dtype=np.int64)
-        attention_mask = np.array([e.attention_mask for e in encoded], dtype=np.int64)
-        token_type_ids = np.array([e.type_ids for e in encoded], dtype=np.int64)
-
-        outputs = self._session.run(None, {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids,
-        })
-
-        hidden = outputs[0]  # (batch, seq, hidden_dim)
-        mask_exp = attention_mask[:, :, np.newaxis].astype(np.float32)
-        pooled = (hidden * mask_exp).sum(axis=1) / mask_exp.sum(axis=1)
-        norms = np.linalg.norm(pooled, axis=1, keepdims=True)
-        return pooled / norms
-
-    # ── Classificazione ─────────────────────────────────────────────
+            logger.warning("[classifier] Errore subprocess: %s", e)
+            return None
 
     def classify(self, text: str, feed_category: str = "") -> ClassificationResult:
         """Classifica un singolo articolo."""
         text_lower = text.lower()
-
         for dim, keywords in KEYWORD_OVERRIDES.items():
             for kw in keywords:
                 pattern = r'(?<![a-zA-Zà-ú])' + re.escape(kw) + r'(?![a-zA-Zà-ú])'
                 if re.search(pattern, text_lower):
-                    return ClassificationResult(
-                        dimension=dim, confidence=0.95, method="keyword"
-                    )
+                    return ClassificationResult(dimension=dim, confidence=0.95, method="keyword")
 
-        if self._load():
-            result = self._classify_semantic(text)
-            self._unload()
-            return result
+        if self._download_model():
+            results = self._run_onnx_subprocess([text])
+            if results:
+                return results[0]
 
         return self._classify_fallback(text_lower, feed_category)
 
@@ -262,9 +286,7 @@ class SmartClassifier:
                 for kw in keywords:
                     pattern = r'(?<![a-zA-Zà-ú])' + re.escape(kw) + r'(?![a-zA-Zà-ú])'
                     if re.search(pattern, text_lower):
-                        results[i] = ClassificationResult(
-                            dimension=dim, confidence=0.95, method="keyword"
-                        )
+                        results[i] = ClassificationResult(dimension=dim, confidence=0.95, method="keyword")
                         matched = True
                         break
                 if matched:
@@ -273,83 +295,18 @@ class SmartClassifier:
                 semantic_indices.append(i)
                 semantic_texts.append(text)
 
-        if semantic_texts and self._load():
-            semantic_results = self._classify_semantic_batch(semantic_texts)
-            self._unload()
-            for idx, result in zip(semantic_indices, semantic_results):
-                results[idx] = result
+        if semantic_texts and self._download_model():
+            semantic_results = self._run_onnx_subprocess(semantic_texts)
+            if semantic_results:
+                for idx, result in zip(semantic_indices, semantic_results):
+                    results[idx] = result
+            else:
+                for idx in semantic_indices:
+                    results[idx] = self._classify_fallback(texts[idx].lower(), feed_categories[idx])
         else:
             for idx in semantic_indices:
                 if results[idx] is None:
-                    results[idx] = self._classify_fallback(
-                        texts[idx].lower(), feed_categories[idx]
-                    )
-
-        return results
-
-    def _classify_semantic(self, text: str) -> ClassificationResult:
-        assert self._dim_embeddings is not None
-        text_emb = self._encode([text])[0]
-
-        best_dim = "non_pertinente"
-        best_score = -1.0
-        scores: dict[str, float] = {}
-
-        for dim, dim_emb in self._dim_embeddings.items():
-            score = float(np.dot(text_emb, dim_emb))
-            scores[dim] = score
-            if dim != "non_pertinente" and score > best_score:
-                best_score = score
-                best_dim = dim
-
-        non_pert_score = scores.get("non_pertinente", 0.0)
-        if best_score < RELEVANCE_THRESHOLD or non_pert_score > best_score:
-            return ClassificationResult(
-                dimension="non_pertinente",
-                confidence=round(max(non_pert_score, 1.0 - best_score), 3),
-                method="semantic",
-            )
-
-        return ClassificationResult(
-            dimension=best_dim,
-            confidence=round(best_score, 3),
-            method="semantic",
-        )
-
-    def _classify_semantic_batch(self, texts: list[str]) -> list[ClassificationResult]:
-        assert self._dim_embeddings is not None
-
-        text_embs = self._encode(texts)
-        dim_names = list(self._dim_embeddings.keys())
-        dim_matrix = np.array([self._dim_embeddings[d] for d in dim_names])
-        sim_matrix = text_embs @ dim_matrix.T
-
-        results: list[ClassificationResult] = []
-        non_pert_idx = dim_names.index("non_pertinente") if "non_pertinente" in dim_names else -1
-
-        for i in range(len(texts)):
-            scores = sim_matrix[i]
-            best_score = -1.0
-            best_dim = "non_pertinente"
-            for j, dim in enumerate(dim_names):
-                if dim != "non_pertinente" and scores[j] > best_score:
-                    best_score = float(scores[j])
-                    best_dim = dim
-
-            non_pert_score = float(scores[non_pert_idx]) if non_pert_idx >= 0 else 0.0
-
-            if best_score < RELEVANCE_THRESHOLD or non_pert_score > best_score:
-                results.append(ClassificationResult(
-                    dimension="non_pertinente",
-                    confidence=round(max(non_pert_score, 1.0 - best_score), 3),
-                    method="semantic",
-                ))
-            else:
-                results.append(ClassificationResult(
-                    dimension=best_dim,
-                    confidence=round(best_score, 3),
-                    method="semantic",
-                ))
+                    results[idx] = self._classify_fallback(texts[idx].lower(), feed_categories[idx])
 
         return results
 
@@ -362,8 +319,6 @@ class SmartClassifier:
             for kw in keywords:
                 pattern = r'(?<![a-zA-Zà-ú])' + re.escape(kw) + r'(?![a-zA-Zà-ú])'
                 if re.search(pattern, text_lower):
-                    return ClassificationResult(
-                        dimension=dim, confidence=0.5, method="fallback"
-                    )
+                    return ClassificationResult(dimension=dim, confidence=0.5, method="fallback")
         dim = CATEGORY_DIMENSION.get(feed_category, "sociale")
         return ClassificationResult(dimension=dim, confidence=0.3, method="fallback")
