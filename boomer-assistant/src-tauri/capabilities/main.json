@@ -1,0 +1,13 @@
+{
+  "identifier": "main-capability",
+  "description": "Main capability for the Boomer Assistant app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:event:allow-listen",
+    "core:event:allow-emit",
+    "shell:default",
+    "shell:allow-open"
+  ]
+}

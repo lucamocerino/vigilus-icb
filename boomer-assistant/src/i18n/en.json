@@ -1,0 +1,46 @@
+{
+  "app": {
+    "title": "Assistant",
+    "subtitle": "Your computer helper"
+  },
+  "voice": {
+    "listening": "Listening...",
+    "press_to_talk": "Press to talk",
+    "processing": "Thinking...",
+    "speaking": "Speaking..."
+  },
+  "status": {
+    "connected": "Connected",
+    "disconnected": "Not connected",
+    "ai_ready": "Ready to help",
+    "ai_loading": "Getting ready..."
+  },
+  "messages": {
+    "welcome": "Hello! I'm your assistant. How can I help you today?",
+    "error_generic": "Sorry, something went wrong. Please try again.",
+    "error_ai": "I can't connect to the brain. Make sure Ollama is running.",
+    "confirm_action": "I'm about to do it. Shall I proceed?",
+    "action_done": "Done! Can I help with anything else?",
+    "not_understood": "Sorry, I didn't catch that. Could you repeat?"
+  },
+  "tools": {
+    "audio": {
+      "checking": "Checking audio...",
+      "volume_set": "Volume set to {level}%",
+      "no_devices": "No audio devices found",
+      "fixed": "Audio fixed!"
+    },
+    "app": {
+      "opening": "Opening {name}...",
+      "not_found": "Can't find {name} on this computer",
+      "opened": "{name} is open!"
+    },
+    "system": {
+      "checking": "Checking the system..."
+    }
+  },
+  "settings": {
+    "language": "Language",
+    "voice_speed": "Voice speed"
+  }
+}

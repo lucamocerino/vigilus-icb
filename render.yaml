@@ -12,7 +12,6 @@ services:
     rootDir: backend
     buildCommand: |
       pip install . &&
-      python -m spacy download it_core_news_sm &&
       python -c "from sentinella.nlp.classifier import get_classifier; get_classifier()._download_model(); print('ONNX model downloaded')" &&
       python -c "import sentinella; print('Build OK')"
     startCommand: uvicorn sentinella.main:app --host 0.0.0.0 --port $PORT

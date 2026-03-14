@@ -1,10 +1,9 @@
 from __future__ import annotations
 """
-Collector RSS — Feed ANSA con classificazione keyword + spaCy NER per geo-tagging.
+Collector RSS — Feed ANSA con classificazione NLP + geo-tagging dizionario.
 """
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, Optional
 import logging
 
 import feedparser
@@ -107,39 +106,16 @@ def get_geo_events() -> list[dict]:
     return list(_geo_events)
 
 
-_nlp: Optional[Any] = None
-
-
-def _get_nlp() -> Optional[Any]:
-    global _nlp
-    if _nlp is None:
-        try:
-            import spacy
-            _nlp = spacy.load("it_core_news_sm", disable=["parser", "senter"])
-            logger.info("[rss] spaCy it_core_news_sm caricato")
-        except Exception as e:
-            logger.warning(f"[rss] spaCy non disponibile: {e}")
-            _nlp = False
-    return _nlp if _nlp is not False else None
-
-
 def _extract_locations(text: str) -> list[dict]:
-    nlp = _get_nlp()
-    if nlp is None:
-        return []
-    try:
-        doc = nlp(text[:500])
-        found, seen = [], set()
-        for ent in doc.ents:
-            if ent.label_ in ("GPE", "LOC"):
-                key = ent.text.lower().strip()
-                if key in ITALIAN_GEO and key not in seen:
-                    lat, lon = ITALIAN_GEO[key]
-                    found.append({"name": ent.text, "lat": lat, "lon": lon})
-                    seen.add(key)
-        return found
-    except Exception:
-        return []
+    """Estrae località italiane dal testo con match dizionario."""
+    found, seen = [], set()
+    text_lower = f" {text.lower()} "
+    # Ordina per lunghezza decrescente per matchare prima nomi composti
+    for location, (lat, lon) in sorted(ITALIAN_GEO.items(), key=lambda x: -len(x[0])):
+        if location not in seen and f" {location} " in text_lower:
+            found.append({"name": location.title(), "lat": lat, "lon": lon})
+            seen.add(location)
+    return found
 
 
 class NewsRssCollector(BaseCollector):

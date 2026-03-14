@@ -1,0 +1,46 @@
+{
+  "app": {
+    "title": "Assistente",
+    "subtitle": "Il tuo aiutante per il computer"
+  },
+  "voice": {
+    "listening": "Ti ascolto...",
+    "press_to_talk": "Premi per parlare",
+    "processing": "Sto pensando...",
+    "speaking": "Sto parlando..."
+  },
+  "status": {
+    "connected": "Connesso",
+    "disconnected": "Non connesso",
+    "ai_ready": "Pronto ad aiutarti",
+    "ai_loading": "Mi sto preparando..."
+  },
+  "messages": {
+    "welcome": "Ciao! Sono il tuo assistente. Come posso aiutarti oggi?",
+    "error_generic": "Mi dispiace, qualcosa non ha funzionato. Riprova.",
+    "error_ai": "Non riesco a collegarmi con il cervello. Verifica che Ollama sia acceso.",
+    "confirm_action": "Sto per farlo. Vuoi che proceda?",
+    "action_done": "Fatto! Posso aiutarti con altro?",
+    "not_understood": "Scusa, non ho capito bene. Puoi ripetere?"
+  },
+  "tools": {
+    "audio": {
+      "checking": "Controllo l'audio...",
+      "volume_set": "Ho impostato il volume a {level}%",
+      "no_devices": "Non trovo dispositivi audio",
+      "fixed": "Ho sistemato l'audio!"
+    },
+    "app": {
+      "opening": "Apro {name}...",
+      "not_found": "Non trovo {name} sul computer",
+      "opened": "{name} è aperto!"
+    },
+    "system": {
+      "checking": "Controllo il sistema..."
+    }
+  },
+  "settings": {
+    "language": "Lingua",
+    "voice_speed": "Velocità voce"
+  }
+}
