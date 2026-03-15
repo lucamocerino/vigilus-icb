@@ -137,9 +137,15 @@ class MegaRssCollector(BaseCollector):
         return CollectorResult(source=self.name, data=data, records_count=len(headlines))
 
     async def _fetch_all(self) -> list[dict]:
-        """Fetch parallelo di tutti i feed con timeout."""
+        """Fetch dei feed con parallelismo limitato per contenere la memoria."""
+        sem = asyncio.Semaphore(5)
+
+        async def _guarded(client: httpx.AsyncClient, feed: dict) -> list[dict]:
+            async with sem:
+                return await self._fetch_feed(client, feed)
+
         async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
-            tasks = [self._fetch_feed(client, feed) for feed in FEEDS]
+            tasks = [_guarded(client, feed) for feed in FEEDS]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
         all_articles: list[dict] = []

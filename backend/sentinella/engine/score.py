@@ -50,20 +50,20 @@ async def run_score_cycle(db: AsyncSession) -> ScoreSnapshot | None:
         "mega_rss": MegaRssCollector(),
     }
 
-    import asyncio
-    results = await asyncio.gather(
-        *[c.safe_collect() for c in collectors.values()],
-        return_exceptions=True,
-    )
-
+    # Esecuzione sequenziale per contenere il picco di memoria (Render free = 512MB)
     collected: dict[str, Any] = {}
-    for (name, _), result in zip(collectors.items(), results):
-        if isinstance(result, Exception) or result is None:
-            logger.warning(f"Collector {name} fallito")
+    for name, collector in collectors.items():
+        try:
+            result = await collector.safe_collect()
+            if result is None:
+                logger.warning(f"Collector {name} fallito")
+                collected[name] = {}
+            else:
+                collected[name] = result.data
+                await _update_source_status(db, name, success=True, records=result.records_count)
+        except Exception:
+            logger.warning(f"Collector {name} fallito", exc_info=True)
             collected[name] = {}
-        else:
-            collected[name] = result.data
-            await _update_source_status(db, name, success=True, records=result.records_count)
 
     # Persist headline events from mega_rss into DB
     mega_rss_data = collected.get("mega_rss", {})
