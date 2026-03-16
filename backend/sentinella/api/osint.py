@@ -180,9 +180,11 @@ async def get_region_brief(
     result = await db.execute(stmt)
     events = result.scalars().all()
 
-    # Conteggi per dimensione
+    # Conteggi per dimensione (escludi non_pertinente)
     dim_counts = {}
     for e in events:
+        if e.dimension == "non_pertinente":
+            continue
         dim_counts[e.dimension] = dim_counts.get(e.dimension, 0) + 1
 
     return {

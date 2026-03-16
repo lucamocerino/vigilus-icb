@@ -60,10 +60,12 @@ async def get_regional_data() -> dict:
         if not macro:
             continue
 
+        dim = event.get("dimension", "geopolitica")
+        if dim == "non_pertinente":
+            continue
+
         region = regions[macro]
         region["event_count"] += 1
-
-        dim = event.get("dimension", "geopolitica")
         region["by_dimension"][dim] = region["by_dimension"].get(dim, 0) + 1
 
         if len(region["recent_events"]) < 5:

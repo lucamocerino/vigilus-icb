@@ -34,7 +34,10 @@ async def get_latest_events(
     cutoff = datetime.now(timezone.utc) - timedelta(days=7)
     stmt = (
         select(ClassifiedEvent)
-        .where(ClassifiedEvent.event_date >= cutoff)
+        .where(
+            ClassifiedEvent.event_date >= cutoff,
+            ClassifiedEvent.dimension != "non_pertinente",
+        )
         .order_by(desc(ClassifiedEvent.event_date))
         .limit(limit)
     )
@@ -63,6 +66,7 @@ async def search_events(
         select(ClassifiedEvent)
         .where(
             ClassifiedEvent.event_date >= cutoff,
+            ClassifiedEvent.dimension != "non_pertinente",
             or_(
                 ClassifiedEvent.title.ilike(search_term),
                 ClassifiedEvent.summary.ilike(search_term),
