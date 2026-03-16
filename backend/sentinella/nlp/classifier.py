@@ -346,5 +346,8 @@ class SmartClassifier:
                 pattern = r'(?<![a-zA-Zà-ú])' + re.escape(kw) + r'(?![a-zA-Zà-ú])'
                 if re.search(pattern, text_lower):
                     return ClassificationResult(dimension=dim, confidence=0.5, method="fallback")
-        dim = CATEGORY_DIMENSION.get(feed_category, "sociale")
-        return ClassificationResult(dimension=dim, confidence=0.3, method="fallback")
+        # Se nessun keyword matcha, è non pertinente (non assegnare categoria di default)
+        dim = CATEGORY_DIMENSION.get(feed_category)
+        if dim and feed_category in ("difesa", "cyber", "geopolitica"):
+            return ClassificationResult(dimension=dim, confidence=0.3, method="fallback")
+        return ClassificationResult(dimension="non_pertinente", confidence=0.2, method="fallback")
