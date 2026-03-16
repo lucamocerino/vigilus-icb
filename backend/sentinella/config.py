@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # Valori consigliati: 15, 30, 60, 120, 240
     scheduler_interval_minutes: int = 15
 
+    # NLP classifier mode: "full" (ONNX subprocess, ~250MB) o "lite" (solo keyword, ~0MB)
+    # Su Render free tier (512MB) usare "lite" per evitare OOM
+    nlp_mode: str = "lite"
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

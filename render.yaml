@@ -12,7 +12,6 @@ services:
     rootDir: backend
     buildCommand: |
       pip install . &&
-      python -c "from sentinella.nlp.classifier import get_classifier; get_classifier()._download_model(); print('ONNX model downloaded')" &&
       python -c "import sentinella; print('Build OK')"
     startCommand: uvicorn sentinella.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -31,6 +30,8 @@ services:
         value: "true"
       - key: SCHEDULER_INTERVAL_MINUTES
         value: "30"
+      - key: NLP_MODE
+        value: "lite"
       - key: PYTHON_VERSION
         value: "3.12.0"
 

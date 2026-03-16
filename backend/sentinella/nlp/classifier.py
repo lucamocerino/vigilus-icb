@@ -18,9 +18,7 @@ import sys
 import tarfile
 import threading
 from pathlib import Path
-from typing import TypedDict
-
-import numpy as np
+from typing import Any, TypedDict
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +113,7 @@ class ClassificationResult(TypedDict):
 
 _lock = threading.Lock()
 _instance: SmartClassifier | None = None
+_tfidf: Any = None
 
 
 def get_classifier() -> SmartClassifier:
@@ -125,6 +124,17 @@ def get_classifier() -> SmartClassifier:
             if _instance is None:
                 _instance = SmartClassifier()
     return _instance
+
+
+def _get_tfidf():
+    """Restituisce il singleton TF-IDF (lazy, ~2MB)."""
+    global _tfidf
+    if _tfidf is None:
+        with _lock:
+            if _tfidf is None:
+                from sentinella.nlp.tfidf_classifier import TfidfLiteClassifier
+                _tfidf = TfidfLiteClassifier(DIMENSION_DESCRIPTIONS)
+    return _tfidf
 
 
 # ── Script eseguito nel subprocess per l'inferenza ONNX ──────────────
@@ -256,6 +266,8 @@ class SmartClassifier:
 
     def classify(self, text: str, feed_category: str = "") -> ClassificationResult:
         """Classifica un singolo articolo."""
+        from sentinella.config import settings
+
         text_lower = text.lower()
         for dim, keywords in KEYWORD_OVERRIDES.items():
             for kw in keywords:
@@ -263,15 +275,20 @@ class SmartClassifier:
                 if re.search(pattern, text_lower):
                     return ClassificationResult(dimension=dim, confidence=0.95, method="keyword")
 
-        if self._download_model():
+        if settings.nlp_mode == "full" and self._download_model():
             results = self._run_onnx_subprocess([text])
             if results:
                 return results[0]
 
-        return self._classify_fallback(text_lower, feed_category)
+        # Modalità lite: TF-IDF in-process
+        tfidf = _get_tfidf()
+        dim, conf = tfidf.classify(text)
+        return ClassificationResult(dimension=dim, confidence=conf, method="tfidf")
 
     def classify_batch(self, texts: list[str], feed_categories: list[str] | None = None) -> list[ClassificationResult]:
         """Classifica un batch di articoli."""
+        from sentinella.config import settings
+
         if feed_categories is None:
             feed_categories = [""] * len(texts)
 
@@ -295,7 +312,10 @@ class SmartClassifier:
                 semantic_indices.append(i)
                 semantic_texts.append(text)
 
-        if semantic_texts and self._download_model():
+        # In modalità "lite" skip ONNX subprocess per risparmiare ~250MB
+        use_onnx = settings.nlp_mode == "full"
+
+        if use_onnx and semantic_texts and self._download_model():
             semantic_results = self._run_onnx_subprocess(semantic_texts)
             if semantic_results:
                 for idx, result in zip(semantic_indices, semantic_results):
@@ -303,6 +323,12 @@ class SmartClassifier:
             else:
                 for idx in semantic_indices:
                     results[idx] = self._classify_fallback(texts[idx].lower(), feed_categories[idx])
+        elif semantic_texts:
+            # Modalità lite: TF-IDF in-process
+            tfidf = _get_tfidf()
+            tfidf_results = tfidf.classify_batch(semantic_texts)
+            for idx, (dim, conf) in zip(semantic_indices, tfidf_results):
+                results[idx] = ClassificationResult(dimension=dim, confidence=conf, method="tfidf")
         else:
             for idx in semantic_indices:
                 if results[idx] is None:

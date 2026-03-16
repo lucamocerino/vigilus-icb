@@ -3,6 +3,7 @@ from __future__ import annotations
 Score Engine — orchestra tutti i collector e calcola lo score sintetico finale.
 """
 from datetime import datetime, timezone
+import gc
 import logging
 from typing import Any
 
@@ -64,6 +65,7 @@ async def run_score_cycle(db: AsyncSession) -> ScoreSnapshot | None:
         except Exception:
             logger.warning(f"Collector {name} fallito", exc_info=True)
             collected[name] = {}
+        gc.collect()
 
     # Persist headline events from mega_rss into DB
     mega_rss_data = collected.get("mega_rss", {})

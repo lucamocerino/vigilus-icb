@@ -121,18 +121,33 @@ class MegaRssCollector(BaseCollector):
         logger.info(f"[mega_rss] Cache MISS — fetch {len(FEEDS)} feed")
         headlines = await self._fetch_all()
 
+        # Trim headline per ridurre footprint cache (~70% meno RAM)
+        slim_headlines = [
+            {
+                "title": h.get("title", ""),
+                "source": h.get("source", ""),
+                "category": h.get("category", ""),
+                "dimension": h.get("dimension", ""),
+                "confidence": h.get("confidence", 0),
+                "classification_method": h.get("classification_method", ""),
+                "url": h.get("url", ""),
+                "published": h.get("published", ""),
+            }
+            for h in headlines
+        ]
+
         data = {
-            "total": len(headlines),
-            "by_category": self._group_by(headlines, "category"),
-            "by_dimension": self._group_by(headlines, "dimension"),
-            "by_source": self._group_by(headlines, "source"),
-            "headlines": headlines,
+            "total": len(slim_headlines),
+            "by_category": self._group_by(slim_headlines, "category"),
+            "by_dimension": self._group_by(slim_headlines, "dimension"),
+            "by_source": self._group_by(slim_headlines, "source"),
+            "headlines": slim_headlines,
         }
 
         col_cache.set(CACHE_KEY, data, ttl_seconds=CACHE_TTL)
 
         _all_headlines.clear()
-        _all_headlines.extend(headlines)
+        _all_headlines.extend(slim_headlines)
 
         return CollectorResult(source=self.name, data=data, records_count=len(headlines))
 
