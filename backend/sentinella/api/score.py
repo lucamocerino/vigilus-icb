@@ -147,3 +147,40 @@ async def trigger_score(db: AsyncSession = Depends(get_db)) -> dict:
         raise HTTPException(status_code=500, detail="Ciclo score fallito")
 
     return {"id": snapshot.id, "score": snapshot.score, "level": snapshot.level}
+
+
+@router.post("/cleanup", summary="Riclassifica eventi con bassa confidence")
+async def cleanup_events(db: AsyncSession = Depends(get_db)) -> dict:
+    """Riclassifica gli eventi salvati con il vecchio fallback e rimuove i non pertinenti."""
+    from sentinella.nlp.classifier import get_classifier
+    from sentinella.models.event import ClassifiedEvent
+    from sqlalchemy import delete
+
+    classifier = get_classifier()
+
+    # Prendi tutti gli eventi degli ultimi 7 giorni
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+    stmt = select(ClassifiedEvent).where(ClassifiedEvent.event_date >= cutoff)
+    result = await db.execute(stmt)
+    events = result.scalars().all()
+
+    reclassified = 0
+    deleted = 0
+    for event in events:
+        text = (event.title or "") + " " + (event.summary or "")
+        r = classifier.classify(text.strip())
+        new_dim = r["dimension"]
+
+        if new_dim == "non_pertinente":
+            await db.delete(event)
+            deleted += 1
+        elif new_dim != event.dimension:
+            event.dimension = new_dim
+            reclassified += 1
+
+    await db.commit()
+    return {
+        "total_checked": len(events),
+        "reclassified": reclassified,
+        "deleted_non_pertinente": deleted,
+    }
