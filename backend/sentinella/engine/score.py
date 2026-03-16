@@ -187,6 +187,8 @@ async def _persist_headlines(db: AsyncSession, headlines: list[dict]) -> None:
                 continue
             if not h.get("title"):
                 continue
+            if h.get("dimension") == "non_pertinente":
+                continue
 
             event = ClassifiedEvent(
                 source=h.get("source", "rss")[:30],

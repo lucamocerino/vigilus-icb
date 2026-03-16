@@ -122,6 +122,7 @@ class MegaRssCollector(BaseCollector):
         headlines = await self._fetch_all()
 
         # Trim headline per ridurre footprint cache (~70% meno RAM)
+        # Escludi articoli non pertinenti (gossip, sport, spettacolo)
         slim_headlines = [
             {
                 "title": h.get("title", ""),
@@ -134,6 +135,7 @@ class MegaRssCollector(BaseCollector):
                 "published": h.get("published", ""),
             }
             for h in headlines
+            if h.get("dimension") != "non_pertinente"
         ]
 
         data = {

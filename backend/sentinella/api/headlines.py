@@ -22,7 +22,7 @@ async def get_headlines() -> list[dict]:
 
     def _add(title: str, source: str, dimension: str, url: str):
         t = title.strip()
-        if t and t.lower() not in seen_titles:
+        if t and t.lower() not in seen_titles and dimension != "non_pertinente":
             seen_titles.add(t.lower())
             headlines.append({"title": t, "source": source, "dimension": dimension, "url": url})
 
